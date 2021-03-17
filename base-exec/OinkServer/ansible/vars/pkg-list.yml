@@ -1,0 +1,15 @@
+packages:
+  # Firewall
+  - "nftables"
+  # Directory Management (Letsencrypt)
+  - "lsyncd"
+  # DNS
+  - "resolvconf"
+  # Filesystem Management
+  - "xfsprogs"
+  # Docker Community Edition
+  - "docker-ce"
+  - "docker-ce-cli"
+  - "containerd.io"
+  # GCloud
+  - "google-cloud-sdk"

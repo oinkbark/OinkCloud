@@ -1,0 +1,285 @@
+- hosts: 127.0.0.1
+  connection: local
+  vars:
+    # Software Packages
+    consul_version: "1.9.3"
+    consul_template_version: "0.25.2"
+    vault_version: "1.6.3"
+    nomad_version: "1.0.4"
+
+    # System
+    debian_codename: buster
+    kernel_name: linux
+    hardware_name: x86_64
+  vars_files:
+    - ./vars/pkg-list.yml
+  tasks:
+    - name: Root Execution
+      become: yes
+      become_user: root
+      block:
+
+        - name: Verify OinkServer Directories
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: directory
+          loop:
+            - /var/log/oinkserver
+            - /root/OinkServer/openssl
+            - /root/OinkServer/env
+            - /root/OinkServer/downloads
+        - name: Verify SSH Directory
+          ansible.builtin.file:
+            path: .ssh
+            state: directory
+            mode: 0660
+        # Will be accessed by lsyncd (root) and certbot (root)
+        - name: Verify Certbot Letsencrypt Directory 01
+          ansible.builtin.file:
+            path: /etc/letsencrypt
+            state: directory
+            mode: 0700
+            group: root
+            owner: root
+        - name: Verify Certbot Letsencrypt Directory 02
+          ansible.builtin.file:
+            path: /etc/letsencrypt/live
+            state: directory
+        # Will be accessed by NGINX through lsyncd mirror (www-data)
+        # Otherwise, it would not be able to access this dir based on parent owner + perms
+        - name: Verify Nginx Letsencrypt Directory 01
+          ansible.builtin.file:
+            path: /etc/letsencrypt/oinkserver
+            state: directory
+            mode: 0700
+            group: www-data
+            owner: www-data
+        - name: Verify Nginx Letsencrypt Directory 02
+          ansible.builtin.file:
+            path: /etc/letsencrypt/oinkserver/live
+            state: directory
+        - name: Verify HashiCorp Directories
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: directory
+          loop:
+            # Consul
+            - /etc/consul.d
+            - /opt/consul
+            - /opt/cni/bin
+            # Vault
+            - /etc/vault.d/config
+            - /etc/vault.d/tls
+            # Nomad
+            - /etc/nomad.d
+            - /opt/nomad
+
+        - name: Verify Groups
+          ansible.builtin.group:
+            name: "{{ item }}"
+            state: present
+          loop:
+            - Docker
+            - OinkServer
+
+        - name: Create HashiCorp Users
+          ansible.builtin.user:
+            name: "{{ item }}"
+            groups: OinkServer,Docker
+            shell: /bin/bash
+            generate_ssh_key: yes
+          loop:
+            - Terraform
+            - Consul
+            - Vault
+            - Nomad
+  
+        - name: DNS
+          ansible.builtin.systemd:
+            state: started
+            name: resolvconf.service
+
+        - name: Attempt to prevent APT locks from blocking execution
+          ansible.builtin.systemd:
+            state: stopped
+            enabled: false
+            name: "{{ item }}" 
+          loop:
+            - apt-daily.service
+            - apt-daily.timer
+            - apt-daily-upgrade.timer
+            - apt-daily-upgrade.service
+        - name: Same as prior
+          ansible.builtin.command:
+            cmd: "{{ item }}"
+          loop:
+            - pkill -f apt
+            - pkill -f apt-get
+
+        - name: Docker and GCloud APT key
+          ansible.builtin.apt_key:
+            url: "{{ item }}"
+            state: present
+          loop:
+            - https://download.docker.com/linux/debian/gpg
+            - https://packages.cloud.google.com/apt/doc/apt-key.gpg
+          register: result
+          until: result is not failed
+          retries: 100
+          delay: 10
+
+        - name: Docker and GCloud Custom Source
+          ansible.builtin.apt_repository:
+            repo: "{{ item }}"
+          loop:
+            - deb [arch=amd64] https://download.docker.com/linux/debian {{ debian_codename }} stable
+            - deb https://packages.cloud.google.com/apt cloud-sdk main
+          register: result
+          until: result is not failed
+          retries: 100
+          delay: 10
+
+        - name: Secure Package Fetching
+          ansible.builtin.apt:
+            state: latest
+            pkg:
+              - "apt-transport-https"
+              - "ca-certificates"
+              - "gnupg2"
+              - "software-properties-common"
+              - "unzip"
+              - "tar"
+          register: result
+          until: result is not failed
+          retries: 100
+          delay: 10
+
+        - name: Download Consul
+          ansible.builtin.get_url: 
+            url: "https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_amd64.zip"
+            checksum: "sha256:https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_SHA256SUMS"
+            dest: /root/OinkServer/downloads/consul-{{ consul_version }}.zip
+        - name: Install Consul
+          ansible.builtin.unarchive:
+            src: /root/OinkServer/downloads/consul-{{ consul_version }}.zip
+            dest: /usr/local/bin
+            mode: 0770
+        # - name: Install Consul/Nomad CNI Plugins
+        #   ansible.builtin.unarchive:
+        #     remote_src: yes
+        #     src: https://github.com/containernetworking/plugins/releases/download/v0.8.7/cni-plugins-linux-amd64-v0.8.7.tgz
+        #     #checksum: "sha256: https://github.com/containernetworking/plugins/releases/download/v0.8.7/cni-plugins-linux-amd64-v0.8.7.tgz.sha256"
+        #     dest: /opt/cni/bin
+        #     mode: 0770
+        - name: Install Consul Template
+          ansible.builtin.unarchive:
+            remote_src: yes
+            src: https://releases.hashicorp.com/consul-template/{{ consul_template_version }}/consul-template_{{ consul_template_version }}_linux_amd64.zip
+            dest: /usr/local/bin
+            mode: 0770
+
+        - name: Download Vault
+          ansible.builtin.get_url:
+            url: "https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_linux_amd64.zip"
+            checksum: "sha256:https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_SHA256SUMS"
+            dest: /root/OinkServer/downloads/vault-{{ vault_version }}.zip
+        - name: Install Vault
+          ansible.builtin.unarchive:
+            src: /root/OinkServer/downloads/vault-{{ vault_version }}.zip
+            dest: /usr/local/bin
+            mode: 0770
+
+        - name: Download Nomad
+          ansible.builtin.get_url: 
+            url: "https://releases.hashicorp.com/nomad/{{ nomad_version }}/nomad_{{ nomad_version }}_linux_amd64.zip"
+            checksum: "sha256:https://releases.hashicorp.com/nomad/{{ nomad_version }}/nomad_{{ nomad_version }}_SHA256SUMS"
+            dest: /root/OinkServer/downloads/nomad-{{ nomad_version }}.zip
+        - name: Install Nomad
+          ansible.builtin.unarchive:
+            src: /root/OinkServer/downloads/nomad-{{ nomad_version }}.zip
+            dest: /usr/local/bin
+            mode: 0770
+
+        - name: Install Packages
+          ansible.builtin.apt:
+            autoremove: yes
+            autoclean: yes
+            state: latest
+            pkg: "{{ packages }}"
+          register: result
+          until: result is not failed
+          retries: 100
+          delay: 10
+
+        - name: Upgrade All System Packages
+          ansible.builtin.apt:
+            upgrade: full
+          register: result
+          until: result is not failed
+          retries: 100
+          delay: 10
+          
+        
+        # Must be done after ALL packages are installed
+        - name: Verify OS/Kernel Version
+          ansible.builtin.apt:
+            upgrade: dist
+          register: result
+          until: result is not failed
+          retries: 100
+          delay: 10
+
+        - name: Load New Service Files
+          ansible.builtin.systemd:
+            daemon_reload: yes
+        - name: Load New Networking Files
+          ansible.builtin.systemd:
+            name: resolvconf.service
+            state: restarted
+            enabled: yes
+
+        # Must be enabled before Docker
+        - name: Enable Firewall
+          ansible.builtin.systemd:
+            name: nftables.service
+            state: started
+            enabled: yes
+        # Must be enabled after firewall
+        - name: Enable Systemd-Networkd
+          ansible.builtin.systemd:
+            name: systemd-networkd.service
+            state: started
+            enabled: yes
+        - name: Restart Networking
+          ansible.builtin.systemd:
+            name: networking.service
+            state: started
+            enabled: yes
+        - name: Enable Lsyncd
+          ansible.builtin.systemd:
+            name: lsyncd.service
+            state: started
+            enabled: yes
+        - name: Disable Transparent Hugepages
+          ansible.builtin.systemd:
+            name: disable-thp.service
+            state: started
+            enabled: yes
+        # Must be started before Nomad
+        # Stopped; Do not have registry or observe keys yet
+        - name: Enable Docker
+          ansible.builtin.systemd:
+            name: docker.service
+            state: stopped
+            enabled: yes
+        # Stopped; Do not have config files yet
+        - name: Enable Consul
+          ansible.builtin.systemd:
+            name: consul.service
+            state: stopped
+            enabled: yes
+        - name: Enable Nomad
+          ansible.builtin.systemd:
+            name: nomad.service
+            state: stopped
+            enabled: yes
