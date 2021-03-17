@@ -1,0 +1,17 @@
+[Unit]
+Description="HashiCorp Vault Agent - A tool for receiving secrets"
+Documentation=https://www.vaultproject.io/docs/
+Requires=network-online.target nftables.service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/vault agent -config=/etc/vault.d/vault-agent.hcl
+ExecReload=/bin/kill --signal HUP $MAINPID
+KillMode=process
+Restart=on-failure
+EnvironmentFile=/root/OinkServer/env/vault-agent.conf
+StandardOutput=file:/var/log/oinkserver/vault-agent.stdout.log
+StandardError=file:/var/log/oinkserver/vault-agent.stderr.log
+
+[Install]
+WantedBy=multi-user.target

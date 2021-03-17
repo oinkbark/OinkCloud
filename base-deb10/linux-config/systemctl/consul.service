@@ -1,0 +1,19 @@
+[Unit]
+Description=HashiCorp Consul
+Documentation=https://www.consul.io/
+Requires=network-online.target nftables.service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/consul agent --config-dir /etc/consul.d
+ExecReload=/usr/local/bin/consul reload
+ExecStop=/usr/local/bin/consul leave
+KillMode=process
+Restart=on-failure
+LimitNOFILE=65536
+EnvironmentFile=/root/OinkServer/env/consul.conf
+StandardOutput=file:/var/log/oinkserver/consul.stdout.log
+StandardError=file:/var/log/oinkserver/consul.stderr.log
+
+[Install]
+WantedBy=multi-user.target
