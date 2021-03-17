@@ -1,0 +1,43 @@
+  // group "gateway" {
+  //   count = 1
+
+  //   network {
+  //     mode = "host"
+
+  //     port "gateway" {
+  //       static = 8080
+  //       to = 8080
+  //     }
+  //   }
+  //   task "kraken" {
+  //     service {
+  //       id = "kraken"
+  //       name = "kraken"
+  //       address_mode = "driver"
+  //     }
+
+  //     driver = "docker"
+  //     config {
+  //       image = "devopsfaith/krakend:1.2.0"
+
+  //       network_mode = "bridge"
+  //       ports = ["gateway"]
+
+  //       mounts = [
+  //         {
+  //           type = "bind"
+  //           readonly = true
+  //           source = "local/krakend.json"
+  //           target = "/etc/krakend.json"
+  //         }
+  //       ]
+  //     }
+      
+  //     template {
+  //       change_mode = "noop"
+  //       data = file("templates/krakend/krakend.json")
+  //       destination = "local/krakend.json"
+  //     }
+
+  //   }
+  // }

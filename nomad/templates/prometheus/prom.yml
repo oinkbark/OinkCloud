@@ -1,0 +1,65 @@
+# Droplet (Client/Server/persistent)
+# - Docker
+# - Nomad
+# - - Jobs
+# - - - Groups
+# - - - - Tasks
+# - Consul
+# - - Services (always nomad)
+
+
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+# digitalocean_sd_config
+
+  - job_name: 'consul_metrics'
+    scrape_interval: 5s
+
+    metrics_path: /v1/agent/metrics
+    params:
+      format: ['prometheus']
+
+    static_configs:
+      - targets: [ '127.0.0.1:8500' ]
+    
+    # #8400 = rpc 8500 = http, 8600 = DNS
+    # consul_sd_configs:
+    #   - server: '127.0.0.1:8500'
+    #     datacenter: 'dc1'
+    #     scheme: 'http'
+    #     services: [ 'consul' ]
+
+  - job_name: 'nomad_metrics'
+    scrape_interval: 5s
+
+    # consul = /v1/agent/metrics
+    # nomad = /v1/metrics
+    # The HTTP resource path on which to fetch metrics from targets (fetched services).
+    metrics_path: /v1/metrics
+    # HTTP URL params
+    # possibly convert to nomad config option
+    params:
+      format: ['prometheus']
+    
+     # Nomad Service
+     #  http://10.46.0.8:4646/v1/metrics = works (http)
+     #  http://10.46.0.8:4647/v1/metrics = bad (rpc)
+     #  http://10.46.0.8:4648/v1/metrics = bad (serf)
+
+    # Consul Service Discovery
+    # https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config
+    consul_sd_configs:
+      - server: '127.0.0.1:8500'
+        datacenter: 'dc1'
+        scheme: 'http'
+        services: [ 'nomad-client' ]
+
+    # Modify target labels before scraping
+    # Any labels starting with "__" are hidden
+    # relabel_configs:
+    #   - source_labels: ['__meta_consul_tags']
+    #     regex: '(.*)http(.*)'
+    #     action: keep
