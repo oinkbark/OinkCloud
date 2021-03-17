@@ -1,0 +1,47 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: Verify Vault server is running
+    ansible.builtin.systemd:
+      name: vault-server.service
+      state: started
+      enabled: true
+  - name: Login to Vault as root
+    ansible.builtin.shell:
+      cmd: vault login $(cat /mnt/role_server/vault-persist/root_token)
+
+  - name: Enable auth and secrets backends
+    ansible.builtin.command:
+      cmd: "vault {{ item }}"
+    loop: 
+      - auth enable gcp
+      - secrets enable gcp
+      - secrets enable kv-v2
+      - secrets enable nomad
+    register: result
+    failed_when:
+      - result.rc == 1
+      - '"path is already in use" not in result.stderr'
+  - name: Configure GCloud Auth Method Credentials
+    ansible.builtin.command:
+      cmd: vault write auth/gcp/config credentials=@/mnt/role_server/terraform-persist/vault-verifier.json
+  - name: Configure GCloud Secrets Backend Credentials
+    ansible.builtin.command:
+      cmd: vault write gcp/config credentials=@/mnt/role_server/terraform-persist/vault-generator.json
+
+  - name: Inject Vault role path access policies
+    ansible.builtin.command:
+      cmd: "vault policy write {{ item }} /etc/vault.d/policies/{{ item }}.hcl"
+    loop:
+      - certs
+      - gcloud-consumer
+  - name: Inject GCloud roleset bindings for generated secrets
+    ansible.builtin.command:
+      cmd: "vault write gcp/roleset/{{ item }} project=oinkserver secret_type=service_account_key bindings=@/etc/vault.d/rolesets/{{ item }}.hcl"
+    loop:
+      - bucket-manager
+      - object-admin
+      - registry-reader
+  - name: Create Vault role for authenticated consumers
+    ansible.builtin.command:
+      cmd: vault write auth/gcp/role/gcloud-consumer type="iam" name="gcloud-consumer" policies="gcloud-consumer,certs" bound_service_accounts="*"

@@ -1,0 +1,30 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Write Vault root token to GCloud Secret Manager
+      ansible.builtin.uri:
+        url: https://secretmanager.googleapis.com/v1/projects/oinkserver/secrets/VAULT_ROOT:addVersion
+        method: POST
+        body: "{ payload: { data: {{ lookup('file','/mnt/role_server/vault-persist/root_token') }} } }"
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+          Authorization: "Bearer {{ lookup('file','/mnt/role_server/terraform-persist/secret-write.json') }}"
+    - name: Write Vault/Consul CA crt to GCloud Secret Manager
+      ansible.builtin.uri:
+        url: https://secretmanager.googleapis.com/v1/projects/oinkserver/secrets/CONSUL_CA_CRT:addVersion
+        method: POST
+        body: "{ payload: { data: {{ lookup('file','/root/OinkServer/openssl/server.dc1.consul-ca.crt') }} } }"
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+          Authorization: "Bearer {{ lookup('file','/mnt/role_server/terraform-persist/secret-write.json') }}"
+    - name: Write Nomad root token to GCloud Secret Manager
+      ansible.builtin.uri:
+        url: https://secretmanager.googleapis.com/v1/projects/oinkserver/secrets/NOMAD_ROOT:addVersion
+        method: POST
+        body: "{ payload: { data: {{ lookup('file','/mnt/role_server/nomad-persist/root_token') }} } }"
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+          Authorization: "Bearer {{ lookup('file','/mnt/role_server/terraform-persist/secret-write.json') }}"

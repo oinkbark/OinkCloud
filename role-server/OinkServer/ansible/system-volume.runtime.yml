@@ -1,0 +1,18 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    # This mount is required for the system to operate
+    - name: Verify volume mount state
+      ansible.builtin.stat:
+        path: "{{ mount_path }}"
+      register: result
+      failed_when: not result.stat.exists
+    - name: Verify volume mount directories
+      ansible.builtin.file:
+        path: "{{ mount_path }}/{{ item }}"
+        state: directory
+      loop:
+        - terraform-persist
+        - vault-persist
+        - consul-persist
+        - nomad-persist

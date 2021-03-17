@@ -1,0 +1,19 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Login to Vault as root
+      ansible.builtin.shell:
+        cmd: vault login $(cat /mnt/role_server/vault-persist/vault_root_token)
+    - name: Save Public CA certs to Vault for client usage
+      ansible.builtin.command:
+        cmd: "vault kv put kv-v2/certs/{{ item }} key={{ oof }}"
+      loop: 
+        - server.dc1.consul-ca.crt
+        - server.global.nomad-ca.crt
+    # Consul can auto-generate their clients TLS certificates
+    - name: Save client TLS certs to Vault
+      ansible.builtin.command:
+        cmd: "vault kv put kv-v2/certs/{{ item }} key={{ oof }}"
+      loop: 
+        - client.global.nomad-tls.crt
+        - client.global.nomad-tls.key

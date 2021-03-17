@@ -1,0 +1,48 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Set Vault token for Nomad usage
+      ansible.builtin.lineinfile: 
+        path: /root/OinkServer/env/nomad.conf
+        regexp: 'VAULT_TOKEN'
+        line: VAULT_TOKEN="{{ lookup('file', mount_path + '/vault-persist/root_token') }}"
+        state: present
+    - name: Set Nomad data dir
+      ansible.builtin.lineinfile: 
+        path: /etc/nomad.d/nomad-server.hcl
+        regexp: 'data_dir ='
+        line: data_dir = "{{ mount_path }}/nomad-persist"
+        state: present
+    - name: Reload Nomad Config
+      ansible.builtin.systemd:
+        name: nomad.service
+        state: restarted
+        daemon_reload: yes
+    - name: Verify Nomad init state
+      ansible.builtin.stat:
+        path: "{{ mount_path }}/nomad-persist/root_token"
+      register: result
+    - name: Initialize HashiCorp Nomad
+      when: not result.stat.exists
+      block:
+      - name: Enable Nomad ACL
+        ansible.builtin.shell:
+          cmd: nomad acl bootstrap
+        register: nomad_raw
+        retries: 5
+        delay: 5
+        until: nomad_raw is not failed
+        # try: regex_replace('.*Secret ID\s*= (.*?\n).*', '\\1')
+      - name: Parse response output
+        set_fact:
+          nomad_parsed: "{{ nomad_raw.stdout | regex_search('Secret ID.*') | regex_replace('Secret ID.*= (.*)', '\\1') }}"
+      - name: Save Nomad root token
+        ansible.builtin.copy:
+          content: "{{ nomad_parsed }}"
+          dest: "{{ mount_path }}/nomad-persist/root_token"
+      - name: Set Nomad token for CLI usage
+        ansible.builtin.lineinfile: 
+          path: /root/OinkServer/env/nomad.conf
+          regexp: 'NOMAD_TOKEN'
+          line: NOMAD_TOKEN="{{ nomad_parsed }}"
+          state: present

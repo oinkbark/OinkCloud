@@ -1,0 +1,58 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Set Vault credentials path
+      ansible.builtin.lineinfile: 
+        path: /etc/vault.d/vault-server.hcl
+        regexp: 'credentials ='
+        line: credentials = "{{ mount_path }}/terraform-persist/vault-unseal.json"
+        state: present
+    - name: Reload Vault server config
+      ansible.builtin.systemd:
+        name: vault-server.service
+        state: restarted
+        enabled: true
+        daemon_reload: yes
+    - name: Verify Vault init state
+      ansible.builtin.stat:
+        path: "{{ mount_path }}/vault-persist/root_token"
+      register: result
+    - name: Initialize HashiCorp Vault
+      when: not result.stat.exists
+      block:
+      - name: Initialize Vault server
+        ansible.builtin.shell: vault operator init -recovery-shares=1 -recovery-threshold=1 -format=json
+        register: vault_init
+        retries: 5
+        delay: 5
+        until: vault_init is not failed
+      - name: Parse response output
+        set_fact:
+          vault_init_parsed: "{{ vault_init.stdout | from_json }}"
+
+      - name: Save recovery keys in base 64 format
+        ansible.builtin.copy:
+          dest: "{{ mount_path }}/vault-persist/recovery_key_{{ key_index }}.b64"
+          content: "{{ item }}"
+        loop: "{{ vault_init_parsed.recovery_keys_b64 }}"
+        loop_control:
+          index_var: key_index
+          label: "{{ key_index }}"
+      - name: Save recovery keys in hex format
+        ansible.builtin.copy:
+          dest: "{{ mount_path }}/vault-persist/recovery_key_{{ key_index }}.hex"
+          content: "{{ item }}"
+        loop: "{{ vault_init_parsed.recovery_keys_hex }}"
+        loop_control:
+          index_var: key_index
+          label: "{{ key_index }}"
+      - name: Save root token
+        ansible.builtin.copy:
+          content: "{{ vault_init_parsed.root_token }}"
+          dest: "{{ mount_path }}/vault-persist/root_token"
+      - name: Set Vault token for CLI usage
+        ansible.builtin.lineinfile: 
+          path: /root/OinkServer/env/vault-server.conf
+          regexp: 'VAULT_TOKEN'
+          line: VAULT_TOKEN="{{ lookup('file','{{ mount_path }}/vault-persist/root_token') }}"
+          state: present

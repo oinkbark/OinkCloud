@@ -1,0 +1,16 @@
+{{ with secret "gcp/key/registry-reader" }}
+{{ $username := "_json_key" }}
+{{ $password := (.Data.private_key_data | base64Decode) }}
+{{ $dockerEncoding := ((print $username ":" $password) | base64Encode) }}
+{
+  "auths": {
+    "gcr.io": {
+      "auth": "{{ $dockerEncoding }}"
+    }
+  },
+  "credHelpers": {
+    "gcr.io": "gcloud"
+  },
+  "credsStore": ""
+}
+{{ end }}

@@ -1,0 +1,8 @@
+- name: CA Private Key
+  ansible.builtin.command:
+    cmd: 'openssl genrsa -out /root/OinkServer/openssl/{{ item }}-ca.key 2048'
+    creates: /root/OinkServer/openssl/{{ item }}-ca.key
+- name: CA Public Certificate
+  ansible.builtin.command:
+    cmd: 'openssl req -x509 -new -nodes -key /root/OinkServer/openssl/{{ item }}-ca.key -sha256 -days 3650 -out /root/OinkServer/openssl/{{ item }}-ca.crt -subj "/C=US/ST=WA/L=SEATTLE/O=HashiCorp/CN={{ item }}"'
+    creates: /root/OinkServer/openssl/{{ item }}-ca.crt

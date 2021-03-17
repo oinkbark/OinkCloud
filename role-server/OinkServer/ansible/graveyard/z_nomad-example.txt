@@ -1,0 +1,9 @@
+echo -e "Accessor ID  = abc123
+Secret ID    = abc123
+Name         = Bootstrap Token
+Type         = management
+Global       = true
+Policies     = n/a
+Create Time  = 0000-00-00 00:00:00.000000000 +0000 UTC
+Create Index = 000
+Modify Index = 000"

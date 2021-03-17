@@ -1,0 +1,12 @@
+- name: Generate Runtime Keys
+  include: gen-keys.yml
+
+- name: Setup Vault Server
+  include: vault-server.yml
+- name: Setup Consul Server
+  include: consul-server.yml
+- name: Setup Nomad Server
+  include: nomad-server.yml
+
+- name: Save HashiCorp Root Keys
+  include: root-save.yml

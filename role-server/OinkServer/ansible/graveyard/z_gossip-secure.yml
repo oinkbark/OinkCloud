@@ -1,0 +1,42 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Generate gossip encryption key
+      ansible.builtin.shell:
+        cmd: openssl rand -base64 16
+      register: result
+    - name: Enable Consul encryption
+      ansible.builtin.copy:
+        content: 'encrypt="{{ result.stdout }}"'
+        dest: /etc/consul.d/encrypt.hcl
+    - name: Enable Nomad encryption
+      ansible.builtin.copy:
+        content: 'server { encrypt="{{ result.stdout }}" }'
+        dest: /etc/nomad.d/encrypt.hcl
+
+    - name: Restart services
+      ansible.builtin.systemd:
+        name: "{{ item }}.service"
+        state: restarted
+      loop:
+        - consul
+        - nomad
+    - name: Install key
+      ansible.builtin.command:
+        cmd: "{{ item }} keyring -install {{ result.stdout }}"
+      loop:
+        - consul
+        - nomad operator
+    - name: Use key
+      ansible.builtin.command:
+        cmd: "{{ item }} keyring -use {{ result.stdout }}"
+      loop:
+        - consul
+        - nomad operator
+
+    # - name: Login to Vault as root
+    #   ansible.builtin.shell:
+    #     cmd: vault login $(cat /mnt/role_server/vault-persist/root_token)
+    # - name: Save key to Vault for client usage
+    #   ansible.builtin.shell:
+    #     cmd: "vault kv put kv-v2/consul/config/encryption key=$(cat /root/OinkServer/openssl/gossip.hcl)"

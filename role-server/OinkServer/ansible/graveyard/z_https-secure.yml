@@ -1,0 +1,7 @@
+nomad acl bootstrap
+export NOMAD_TOKEN="BOOTSTRAP_SECRET_ID"
+nomad acl policy apply -description "Anonymous policy (full-access)" anonymous anonymous.policy.hcl
+
+nomad acl token create -type="management" -global=true \
+  -name="Cluster A Replication Token" \
+  -token="c999c4c2-6146-1bac-eb47-3958bbffe9d8"

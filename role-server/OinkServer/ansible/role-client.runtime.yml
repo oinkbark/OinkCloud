@@ -1,0 +1,5 @@
+- name: Setup Vault Agent
+  include: vault-agent.yml
+
+# collect-certs.yml
+# consul retry-join {{ CLUSTER_LEADER_IP }} -retry-interval 10s

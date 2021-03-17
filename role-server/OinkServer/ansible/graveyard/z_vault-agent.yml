@@ -1,0 +1,7 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Start agent
+      ansible.builtin.systemd:
+        name: "vault-agent.service"
+        enabled: true

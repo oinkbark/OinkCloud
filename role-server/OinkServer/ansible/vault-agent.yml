@@ -1,0 +1,15 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Reload Vault agent config
+      ansible.builtin.systemd:
+        name: vault-agent.service
+        state: restarted
+        enabled: true
+        daemon_reload: yes
+    - name: Reload Docker
+      ansible.builtin.systemd:
+        name: docker.service
+        state: restarted
+        enabled: true
+        daemon_reload: yes
