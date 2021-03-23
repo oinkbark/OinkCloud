@@ -47,9 +47,9 @@ resource "vault_cert_auth_backend_role" "vault-client" {
 ## Depends on iam member being set
 ## Vault read will fail with "* googleapi: Error 400: Precondition check failed., failedPrecondition"
 ## when 10 account keys already exist
-resource "vault_gcp_secret_roleset" "registry-reader" {
+resource "vault_gcp_secret_roleset" "artifact-reader" {
   backend = vault_gcp_secret_backend.gcp.path
-  roleset = "registry-reader"
+  roleset = "artifact-reader"
   secret_type = "service_account_key"
   project = "oinkserver"
 
@@ -57,7 +57,22 @@ resource "vault_gcp_secret_roleset" "registry-reader" {
     resource = "projects/oinkserver"
 
     roles = [
-      "roles/storage.objectViewer",
+      var.roles_gcp.artifact_reader
+    ]
+  }
+}
+resource "vault_gcp_secret_roleset" "artifact-tagger" {
+  backend = vault_gcp_secret_backend.gcp.path
+  roleset = "artifact-tagger"
+  secret_type = "access_token"
+  token_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+  project = "oinkserver"
+
+  binding {
+    resource = "projects/oinkserver"
+
+    roles = [
+      var.roles_gcp.artifact_tagger,
     ]
   }
 }
@@ -135,6 +150,7 @@ resource "vault_generic_secret" "tubbyland-oauth" {
   path = "secret/tubbyland/oauth"
   data_json = jsonencode({
     emails: var.nomad.tubbyland_oauth_emails
+    internal: var.nomad.tubbyland_oauth_internal
     gcp: base64encode(var.nomad.tubbyland_oauth_gcp)
   })
 }

@@ -17,6 +17,12 @@ variable "auth_gcp" {
 variable "secrets_gcp" {
   type = string
 }
+variable "roles_gcp" {
+  type = object({
+    artifact_reader = string
+    artifact_tagger = string
+  })
+}
 variable "auth_ca_crt" {
   type = string
 }
@@ -41,6 +47,7 @@ variable "nomad" {
     dns_certbot_token = string
 
     tubbyland_oauth_emails = list(string)
+    tubbyland_oauth_internal = list(string)
     tubbyland_oauth_gcp = string
     tubbyland_db_username = string
     tubbyland_db_password = string

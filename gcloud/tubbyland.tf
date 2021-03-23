@@ -13,6 +13,7 @@ resource "google_project_service" "Compute-tubbyland" {
   service = "compute.googleapis.com"
 }
 
+
 resource "google_project_iam_custom_role" "bucket-manager" {
   project = google_project.tubbyland.project_id
   role_id = "bucket_manager"

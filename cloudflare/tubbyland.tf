@@ -34,6 +34,13 @@ resource "cloudflare_record" "tubbyland-api" {
   value = var.tubbyland.proxy
   proxied = true
 }
+resource "cloudflare_record" "tubbyland-preview" {
+  zone_id = cloudflare_zone.tubbyland.id
+  type = "A"
+  name = "preview"
+  value = var.tubbyland.proxy
+  proxied = true
+}
 
 resource "cloudflare_record" "tubbyland-assets" {
   zone_id = cloudflare_zone.tubbyland.id

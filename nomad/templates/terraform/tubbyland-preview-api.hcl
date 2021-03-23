@@ -1,29 +1,25 @@
-job "tubbyland-api" {
+ job "tubbyland-preview-api" {
   type = "service"
   datacenters = ["dc1"]
-  group "public" {
+
+  group "preview" {
     count = 1
 
-    task "graphql" {
+    task "preview-graphql" {
       service {
-        id = "tubbyland-graphql"
-        name = "tubbyland-graphql"
+        id = "tubbyland-preview-graphql"
+        name = "tubbyland-preview-graphql"
         address_mode = "driver"
-        port = 8080
+        port = 8000
       }
 
       env {
         GOOGLE_CLOUD_PROJECT = "tubbyland"
-        CORS_ORIGIN = "https://tubbyland.com"
-        // CORS_ORIGIN = "http://localhost:3000"
+        CORS_ORIGIN = "https://preview.tubbyland.com"
         NODE_ENV = "production"
-        PORT = 8080
+        PREVIEW = true
+        PORT = 8000
       }
-
-      // update {
-      //   # auto_revert = true
-      //   auto_promote = true
-      // }
 
       driver = "docker"
 
@@ -32,14 +28,11 @@ job "tubbyland-api" {
       }
   
       config {
-        image = "us-docker.pkg.dev/oinkserver/tubbyland/graphql:production"
+        image = "us-docker.pkg.dev/oinkserver/tubbyland/graphql:latest"
         force_pull = true
 
         network_mode = "bridge"
 
-        // auth {
-        //   server_address = "gcr.io"
-        // }
         mount {
           type = "bind"
           readonly = true
@@ -92,6 +85,5 @@ EOF
       }
 
     }
-
   }
 }

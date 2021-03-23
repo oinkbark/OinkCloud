@@ -54,6 +54,16 @@ resource "google_project" "oinkserver" {
   project_id = "oinkserver"
 }
 
+# Artifact Registry
+resource "google_artifact_registry_repository" "tubbyland" {
+  provider = google-beta
+  project = "oinkserver"
+
+  location = "us"
+  repository_id = "tubbyland"
+  format = "DOCKER"
+}
+
 # Custom Roles
 ## https://cloud.google.com/iam/docs/understanding-roles
 ## https://cloud.google.com/iam/docs/custom-roles-permissions-support
@@ -99,11 +109,29 @@ resource "google_project_iam_custom_role" "cloud-build-sa" {
   description = "Allow cloud build to access project resources."
   permissions = [
     "secretmanager.versions.access",
-    "storage.objects.get",
-    "storage.objects.list",
-    "storage.objects.create",
-    "storage.objects.update",
-    "storage.objects.delete"
+    "artifactregistry.repositories.uploadArtifacts",
+  ]
+}
+resource "google_project_iam_custom_role" "artifact-tagger" {
+  role_id = "artifact_tagger"
+  title = "Artifact Tagger"
+  description = "Allow access to modify artifact tags."
+  permissions = [
+    "artifactregistry.tags.get",
+    "artifactregistry.tags.list",
+    "artifactregistry.tags.create",
+    "artifactregistry.tags.update",
+    "artifactregistry.tags.delete"
+  ]
+}
+resource "google_project_iam_custom_role" "artifact-reader" {
+  role_id = "artifact_reader"
+  title = "Artifact Reader"
+  description = "Allow access to fetch artifacts."
+  permissions = [
+    "artifactregistry.files.get",
+    "artifactregistry.packages.get",
+    "artifactregistry.repositories.downloadArtifacts"
   ]
 }
 
@@ -172,6 +200,11 @@ resource "google_project_iam_member" "cloud-build" {
   # member = "serviceAccount:${google_project_service_identity.cloud-build.email"
   member = "serviceAccount:${google_project.oinkserver.number}@cloudbuild.gserviceaccount.com"
   role = google_project_iam_custom_role.cloud-build-sa.name
+}
+resource "google_project_iam_member" "cloud-build-artifact-tagger" {
+  # member = "serviceAccount:${google_project_service_identity.cloud-build.email"
+  member = "serviceAccount:${google_project.oinkserver.number}@cloudbuild.gserviceaccount.com"
+  role = google_project_iam_custom_role.artifact-tagger.name
 }
 // resource "google_project_service_identity" "cloud-build" {
 //   service = "cloudbuild.googleapis.com"
@@ -462,7 +495,7 @@ resource "google_cloudbuild_trigger" "tubbyland-docker" {
       entrypoint = "bash"
       args = [
         "-c",
-        "docker build -t gcr.io/oinkserver/tubbyland-${each.key}:$SHORT_SHA -f prod.Dockerfile ."
+        "docker build --build-arg SHORT_SHA=$SHORT_SHA -t us-docker.pkg.dev/oinkserver/tubbyland/${each.key}:$SHORT_SHA -f prod.Dockerfile ."
       ]
     }
     step {
@@ -471,13 +504,13 @@ resource "google_cloudbuild_trigger" "tubbyland-docker" {
       entrypoint = "bash"
       args = [
         "-c",
-        "docker tag gcr.io/oinkserver/tubbyland-${each.key}:$SHORT_SHA gcr.io/oinkserver/tubbyland-${each.key}:latest"
+        "docker tag us-docker.pkg.dev/oinkserver/tubbyland/${each.key}:$SHORT_SHA us-docker.pkg.dev/oinkserver/tubbyland/${each.key}:latest"
       ]
     }
     artifacts {
       images = [ 
-        "gcr.io/oinkserver/tubbyland-${each.key}:$SHORT_SHA",
-        "gcr.io/oinkserver/tubbyland-${each.key}:latest"
+        "us-docker.pkg.dev/oinkserver/tubbyland/${each.key}:$SHORT_SHA",
+        "us-docker.pkg.dev/oinkserver/tubbyland/${each.key}:latest"
       ]
     }
   }

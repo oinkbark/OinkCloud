@@ -1,5 +1,5 @@
 resource "projects/oinkserver" {
   roles = [
-    "roles/storage.objectViewer",
+    "projects/oinkserver/roles/artifact_tagger",
   ]
 }

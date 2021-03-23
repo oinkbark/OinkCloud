@@ -39,10 +39,12 @@ job "tubbyland-ui" {
 
       env  {
         NODE_ENV = "production"
+        PORT = 3000
       }
 
       config {
-        image = "gcr.io/oinkserver/tubbyland-vue3:${PROD_COMMIT_SHA}"
+        image = "us-docker.pkg.dev/oinkserver/tubbyland/vue3:production"
+        force_pull = true
         network_mode = "bridge"
 
         logging {

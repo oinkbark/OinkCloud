@@ -29,3 +29,9 @@ output "consul-ca-crt" {
   sensitive = true
   value = data.google_secret_manager_secret_version.consul-ca-crt.secret_data
 }
+output "vault-roles" {
+  value = {
+    artifact-reader = google_project_iam_custom_role.artifact-reader.id
+    artifact-tagger = google_project_iam_custom_role.artifact-tagger.id
+  }
+}

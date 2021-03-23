@@ -62,6 +62,10 @@ module "vault" {
   address = "https://${module.digitalocean.role-server.ipv4}:8200"
   tf_vault_root = module.gcloud.vault-root
 
+  roles_gcp = {
+    artifact_reader = module.gcloud.vault-roles.artifact-reader
+    artifact_tagger = module.gcloud.vault-roles.artifact-tagger
+  }
   secrets_gcp = module.gcloud.backend-keys.vault-generator
   auth_gcp =  module.gcloud.backend-keys.vault-verifier
   auth_ca_crt = module.gcloud.consul-ca-crt
@@ -80,6 +84,7 @@ module "vault" {
     dns_certbot_token = var.dns_certbot_token
     tubbyland_oauth_emails = var.tubbyland_oauth_emails_whitelist
     tubbyland_oauth_gcp = var.tubbyland_oauth_gcp_credentials
+    tubbyland_oauth_internal = module.random.tubbyland-internal
     tubbyland_db_username = var.tubbyland_db_username
     tubbyland_db_password = module.random.tubbyland-db
   }

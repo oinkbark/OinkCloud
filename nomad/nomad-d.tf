@@ -2,12 +2,15 @@
 ### Jobs ###
 ############
 
+# System
 data "local_file" "job-proxy" {
   filename = "${path.module}/templates/terraform/job-proxy.hcl"
 }
 data "local_file" "job-observe" {
   filename = "${path.module}/templates/terraform/job-observe.hcl"
 }
+# Tubbyland
+## Production
 data "local_file" "job-tubbyland-api" {
   filename = "${path.module}/templates/terraform/tubbyland-api.hcl"
 }
@@ -16,6 +19,13 @@ data "local_file" "job-tubbyland-db" {
 }
 data "local_file" "job-tubbyland-ui" {
   filename = "${path.module}/templates/terraform/tubbyland-ui.hcl"
+}
+## Preview
+data "local_file" "job-tubbyland-preview-ui" {
+  filename = "${path.module}/templates/terraform/tubbyland-preview-ui.hcl"
+}
+data "local_file" "job-tubbyland-preview-api" {
+  filename = "${path.module}/templates/terraform/tubbyland-preview-api.hcl"
 }
 
 ######################
@@ -64,4 +74,9 @@ data "local_file" "tubbyland-api-secret-oauth-gcp" {
 # Tubbyland DB
 data "local_file" "tubbyland-db-redis" {
   filename = "${path.module}/templates/redis/redis.conf"
+}
+
+# Tubbyland Preview
+data "local_file" "tubbyland-preview-secret-oauth-internal" {
+  filename = "${path.module}/templates/secrets/tubbyland-preview/internal.json.ctmpl"
 }
