@@ -1,0 +1,32 @@
+[Unit]
+Description=Docker Application Container Engine
+Documentation=https://docs.docker.com
+After=network-online.target nftables.service containerd.service vault-agent.service
+Wants=network-online.target
+Requires=docker.socket containerd.service
+BindsTo=nftables.service
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+ExecReload=/usr/sbin/nft flush ruleset
+ExecReload=/usr/sbin/nft -f /etc/nftables.conf
+ExecReload=/bin/kill -HUP $MAINPID
+TimeoutSec=0
+RestartSec=2
+Restart=always
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+TasksMax=infinity
+Delegate=yes
+KillMode=process
+OOMScoreAdjust=-500
+EnvironmentFile=/root/OinkServer/env/docker.conf
+StandardOutput=file:/var/log/oinkserver/docker.stdout.log
+StandardError=file:/var/log/oinkserver/docker.stderr.log
+
+[Install]
+WantedBy=multi-user.target

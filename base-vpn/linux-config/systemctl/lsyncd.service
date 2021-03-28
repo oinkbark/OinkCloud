@@ -1,0 +1,10 @@
+[Unit]
+Description=Live Syncing Daemon
+Documentation=https://axkibe.github.io/lsyncd/
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/lsyncd /etc/lsyncd.conf
+
+[Install]
+WantedBy=multi-user.target

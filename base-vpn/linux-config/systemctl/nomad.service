@@ -1,0 +1,23 @@
+[Unit]
+Description=HashiCorp Nomad
+Documentation=https://nomadproject.io/docs/
+Requires=network-online.target nftables.service consul.service
+After=network-online.target consul.service
+StartLimitBurst=3
+
+[Service]
+ExecStart=/usr/local/bin/nomad agent --config /etc/nomad.d
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+KillSignal=SIGINT
+LimitNOFILE=infinity
+LimitNPROC=infinity
+Restart=on-failure
+RestartSec=2
+TasksMax=infinity
+EnvironmentFile=/root/OinkServer/env/nomad.conf
+StandardOutput=file:/var/log/oinkserver/nomad.stdout.log
+StandardError=file:/var/log/oinkserver/nomad.stderr.log
+
+[Install]
+WantedBy=multi-user.target

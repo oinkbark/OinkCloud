@@ -1,0 +1,90 @@
+###############################################
+### Modify how other clients connect to you ###
+###############################################
+## Located LIVE at /etc/ssh/sshd_config
+## Located RESERVE at /linux-config/system/sshd_config
+
+# Disable V1 of Authentication
+Protocol 2
+
+# Uses default port of 22
+# Reasons:
+# - Only root can bind to ports below 1024
+# - Firewalls, the kernel, and other security system apply specific protections automatically to this port
+# - One less variable to forget or communicate to other parties
+Port 22
+
+# List locations of files that contain authorized user SSH keys
+AuthorizedKeysFile .ssh/authorized_keys /root/.ssh/authorized_keys .ssh/authorized_keys .ssh/oink.authorized_keys /root/.ssh/oink.authorized_keys
+
+# Allow login to root user, but only with a SSH key
+PermitRootLogin prohibit-password
+
+# Ping user twice in 5 min intervals if no data is sent
+# If idle, disconnect connection
+ClientAliveInterval 300
+ClientAliveCountMax 2
+
+# Only allow certain users to be accessed over ssh
+AllowUsers root Terraform Packer Ansible Docker Nomad
+AllowGroups root OinkServer
+
+# Only allow SSH key authentication
+PasswordAuthentication no
+AuthenticationMethods publickey
+
+# Disable GUI
+X11Forwarding no
+
+# Pre-login message/warning
+Banner /etc/ssh/sshd-banner
+
+# More secure hostkeys
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+# Disable IPV4 connection
+# AddressFamily inet6
+AddressFamily any
+
+# Bind SSHD IPV6 ports
+# Must list a network interface when connecting if IPV6 address begins with "fe80::"
+ListenAddress ::
+# Must allow IPV4 for private network transfer between droplets
+ListenAddress 0.0.0.0
+
+
+# Prevent password-less commands from being run
+IgnoreRhosts yes
+PermitEmptyPasswords no
+
+# Use SSH host auth instead of rhost
+HostbasedAuthentication no
+
+# Most times someone can try to login
+# Cannot be lower than 2 
+MaxAuthTries 5
+
+#Concurrent SSH connections (lower = less brute force possibility)
+MaxSessions 3
+
+
+## Algorithms tested by ssh-audit tool
+KexAlgorithms curve25519-sha256@libssh.org,diffie-hellman-group14-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512
+
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com
+
+# Disable port forwarding
+AllowTcpForwarding no
+AllowStreamLocalForwarding no
+GatewayPorts no
+PermitTunnel no
+
+# Log SSH key fingerprint
+LogLevel VERBOSE
+
+# Ignore reverse resolution (speed)
+UseDNS no
