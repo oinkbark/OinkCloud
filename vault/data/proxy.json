@@ -1,0 +1,103 @@
+{
+  "oinkcloud.com": {
+    "domains": {
+      "oinkcloud.com": {
+        "paths": {
+          "/": {
+            "redirect": {
+              "url": "https://github.com/oinkbark/OinkCloud"
+            }
+          }
+        }
+      },
+      "nomad.oinkcloud.com": {
+        "paths": {
+          "/": {
+            "service": {
+              "name": "nomad",
+              "port": 4646
+            }
+          }
+        }
+      },
+      "vault.oinkcloud.com": {
+        "paths": {
+          "/": {
+            "internalTLS": true,
+            "service": {
+              "name": "vault",
+              "port": 8200
+            }
+          }
+        }
+      }
+    }
+  },
+  "tubbyland.com": {
+    "domains": {
+      "tubbyland.com": {
+        "paths": {
+          "/": {
+            "service": {
+              "name": "tubbyland-vue3",
+              "port": 3000
+            }
+          }
+        }
+      },
+      "api.tubbyland.com": {
+        "paths": {
+          "/": {
+            "service": {
+              "name": "tubbyland-vue3",
+              "port": 3000
+            }
+          },
+          "/graphql": {
+            "service": {
+              "name": "tubbyland-graphql",
+              "port": 8080
+            }
+          },
+          "/endpoint": {
+            "service": {
+              "name": "tubbyland-graphql",
+              "port": 8080
+            }
+          }
+        }
+      },
+      "assets.tubbyland.com": {
+        "paths": {
+          "/": {
+            "redirect": {
+              "url": "https://storage.googleapis.com/tubbyland.com"
+            }
+          }
+        }
+      },
+      "preview.tubbyland.com": {
+        "paths": {
+          "/": {
+            "service": {
+              "name": "tubbyland-preview-vue3",
+              "port": 3030
+            }
+          },
+          "/graphql": {
+            "service": {
+              "name": "tubbyland-preview-graphql",
+              "port": 8000
+            }
+          },
+          "/endpoint": {
+            "service": {
+              "name": "tubbyland-preview-graphql",
+              "port": 8000
+            }
+          }
+        }
+      }
+    }
+  }
+}

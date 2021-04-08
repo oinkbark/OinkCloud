@@ -1,186 +1,57 @@
 {{ define "nginx" }}
-# upstream Consul_UI_{{ .name }} {
-#   {{ with service (print .name "-vue3") }}
-#     {{ range . }}
-#       server {{ .Address }}:{{ .Port }};
-#     {{ end }}
-#   {{ end }}
-# 
-#       server 169.254.1.1:3000 backup;
-# }
-# upstream Consul_API_{{ .name }} {
-#   {{ with service (print .name "-graphql") }}
-#     {{ range . }}
-#       server {{ .Address }}:{{ .Port }};
-#     {{ end }}
-#   {{ end }}
-# 
-#       server 169.254.1.1:8080 backup;
-# }
-# 
-# upstream Consul_Preview_UI_{{ .name }} {
-#   {{ with service (print .name "-preview-vue3") }}
-#     {{ range . }}
-#       server {{ .Address }}:{{ .Port }};
-#     {{ end }}
-#   {{ end }}
-# 
-#       server 169.254.1.1:3030 backup;
-# }
-# upstream Consul_Preview_API_{{ .name }} {
-#   {{ with service (print .name "-preview-graphql") }}
-#     {{ range . }}
-#       server {{ .Address }}:{{ .Port }};
-#     {{ end }}
-#   {{ end }}
-# 
-#       server 169.254.1.1:8000 backup;
-# }
+  {{ range $namespaceKey, $namespaceValue := . }}
 
-server {
-  server_name api.{{ .link }};
+    {{ range $domainKey, $domainValue := $namespaceValue.domains }}
+    server {
+      server_name {{ $domainKey }};
 
-  listen *:80;
-  listen [::]:80;
+      listen *:80;
+      listen [::]:80;
 
-  location / {
-    return 301 https://$host$request_uri;
-  }
-}
+      # Process plain HTTP request which has been sent to HTTPS port
+      error_page 497 https://$host:$server_port$request_uri;
 
-server {
-  server_name {{ .link }};
+      location / {
+        return 301 https://$host$request_uri;
+      }
+    }
 
-  # IPv6 AND IPv4
-  listen *:80;
-  listen [::]:80;
+    server {
+      server_name {{ $domainKey }};
 
-  # Non-standard error code 497
-  # Used to process plain HTTP request which has been sent to HTTPS port
-  error_page 497 https://$host:$server_port$request_uri;
+      listen *:443 ssl http2;
+      listen [::]:443 ssl http2;
 
-  # Prove site ownership to Certbot
-  # Must be done before SSL redirect
-  location ^~ /.well-known/acme-challenge/ {
-    default_type "text/plain";
-    root letsencrypt/acme-challenge/;
-  }
+      ssl_certificate letsencrypt/live/{{ $namespaceKey }}/fullchain.pem;
+      ssl_certificate_key letsencrypt/live/{{ $namespaceKey }}/privkey.pem;
 
-  location / {
-    return 301 https://$host$request_uri;
-  }
-}
-# trailing slash after upstream will alter path
-# otherwise, path carries over
-server {
-  server_name api.{{ .link }};
+      {{ range $pathKey, $pathValue := $domainValue.paths }}
+      location {{ $pathKey }} {
+        {{ if $pathValue.service }}
+          set $upstream {{ (print $pathValue.service.name ".service.consul:" $pathValue.service.port) }};
 
-  listen *:443    ssl http2;
-  listen [::]:443 ssl http2;
-
-  ssl_certificate letsencrypt/live/{{ .link }}/fullchain.pem;
-  ssl_certificate_key letsencrypt/live/{{ .link }}/privkey.pem;
-
-  location /graphql {
-    # set $upstream Consul_API_{{ .name }};
-    set $upstream {{ .name }}-graphql.service.consul:8080;
-
-    proxy_pass http://$upstream;
-  }
-
-  location /endpoint {
-    # set $upstream Consul_API_{{ .name }};
-    set $upstream {{ .name }}-graphql.service.consul:8080;
-
-    proxy_pass http://$upstream;
-  }
-
-  location / {
-    # set $upstream Consul_UI_{{ .name }};
-    set $upstream {{ .name }}-vue3.service.consul:3000;
-
-    proxy_set_header Host api.{{ .link }};
-    proxy_pass http://$upstream;
-  }
-}
-server {
-  server_name assets.{{ .link }};
-
-  listen *:443    ssl http2;
-  listen [::]:443 ssl http2;
-
-  ssl_certificate letsencrypt/live/{{ .link }}/fullchain.pem;
-  ssl_certificate_key letsencrypt/live/{{ .link }}/privkey.pem;
-
-  location / {
-    return 301 https://storage.googleapis.com/{{ .link }}$request_uri;
-  }
-}
-
-server {
-  server_name {{ .link }};
-
-  listen *:443    ssl http2;
-  listen [::]:443 ssl http2;
-
-  ssl_certificate letsencrypt/live/{{ .link }}/fullchain.pem;
-  ssl_certificate_key letsencrypt/live/{{ .link }}/privkey.pem;
-
-  location ~ .php$ {
-    deny all;
-  }
-  location /cgi-bin {
-    deny all;
-  }
-  location ~ /\.(?!well-known) {
-    deny all;
-  }
-
-  location / {
-    # set $upstream Consul_UI_{{ .name }};
-    set $upstream {{ .name }}-vue3.service.consul:3000;
-
-    proxy_set_header Host {{ .link }};
-    proxy_pass http://$upstream;
-  }
-}
-
-server {
-  server_name preview.{{ .link }};
-
-  listen *:443    ssl http2;
-  listen [::]:443 ssl http2;
-
-  ssl_certificate letsencrypt/live/{{ .link }}/fullchain.pem;
-  ssl_certificate_key letsencrypt/live/{{ .link }}/privkey.pem;
-
-  location /graphql {
-    # set $upstream Consul_Preview_API_{{ .name }};
-    set $upstream {{ .name }}-preview-graphql.service.consul:8000;
-
-    proxy_pass http://$upstream;
-  }
-
-  location /endpoint {
-    # set $upstream Consul_Preview_API_{{ .name }};
-    set $upstream {{ .name }}-preview-graphql.service.consul:8000;
-
-    proxy_pass http://$upstream;
-  }
-
-  location / {
-    # set $upstream Consul_Preview_UI_{{ .name }};
-    set $upstream {{ .name }}-preview-vue3.service.consul:3030;
-
-    proxy_set_header Host preview.{{ .link }};
-    proxy_pass http://$upstream;
-  }
-}
+          proxy_set_header Host {{ $domainKey }};
+          {{ if $pathValue.internalTLS }}
+            proxy_pass https://$upstream;
+          {{ else }}
+            proxy_pass http://$upstream;
+          {{ end }}
+        {{ else if $pathValue.redirect }}
+          {{ if $pathValue.redirect.proxied }}
+            proxy_set_header Host {{ $domainKey }};
+            proxy_pass http://{{ $pathValue.redirect.url }};
+          {{ else }}
+            return 301 {{ $pathValue.redirect.url }}$request_uri;
+          {{ end }}
+        {{ end }}
+      }
+      {{ end }}
+    }
+    {{ end }}
+  {{ end }}
 {{ end }}
 
-{{ with secret "secret/oinkserver/domains" }}
-{{ $domains := .Data.data.nginx }}
-{{ range $domains }}
-{{ executeTemplate "nginx" . }}
-{{ end }}
+{{ with secret "secret/oinkserver/proxy" }}
+{{ $namespaces := .Data.data }}
+{{ executeTemplate "nginx" $namespaces }}
 {{ end }}

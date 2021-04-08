@@ -3,7 +3,7 @@ terraform {
   required_providers {
     cloudflare = {
       source = "cloudflare/cloudflare"
-      version = "2.18.0"
+      version = "2.19.2"
     }
   }
   backend "remote" {

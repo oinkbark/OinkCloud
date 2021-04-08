@@ -1,3 +1,29 @@
+# OinkBark
+resource "nomad_job" "oinkbark-ssl" {
+  jobspec = templatefile("${path.module}/templates/terraform/job-ssl.hcl", {
+    DOMAIN_NAME = "oinkbark",
+    DOMAIN_TLD = "com"
+  })
+
+  hcl2 {
+    enabled  = true
+    allow_fs = true
+  }
+}
+
+# OinkCloud
+resource "nomad_job" "oinkcloud-ssl" {
+  jobspec = templatefile("${path.module}/templates/terraform/job-ssl.hcl", {
+    DOMAIN_NAME = "oinkcloud",
+    DOMAIN_TLD = "com"
+  })
+
+  hcl2 {
+    enabled  = true
+    allow_fs = true
+  }
+}
+
 # Tubbyland
 ## Production
 resource "nomad_job" "tubbyland-ssl" {
@@ -47,29 +73,29 @@ resource "nomad_job" "tubbyland-ui" {
   }
 }
 ## Preview
-resource "nomad_job" "tubbyland-preview-ui" {
-  jobspec = data.local_file.job-tubbyland-preview-ui.content
+// resource "nomad_job" "tubbyland-preview-ui" {
+//   jobspec = data.local_file.job-tubbyland-preview-ui.content
 
-  hcl2 {
-    enabled  = true
-    allow_fs = false
-  }
-}
-resource "nomad_job" "tubbyland-preview-api" {
-  jobspec = templatefile(data.local_file.job-tubbyland-preview-api.filename, {
-    TEMPLATE_SECRET_DB = data.local_file.tubbyland-api-secret-db.content,
-    TEMPLATE_SECRET_BUCKET_MANAGER = data.local_file.tubbyland-api-secret-bucket-manager.content,
-    TEMPLATE_SECRET_OBJECT_ADMIN = data.local_file.tubbyland-api-secret-object-admin.content,
-    TEMPLATE_SECRET_OAUTH_EMAILS = data.local_file.tubbyland-api-secret-emails.content,
-    TEMPLATE_SECRET_OAUTH_GCP = data.local_file.tubbyland-api-secret-oauth-gcp.content,
-    TEMPLATE_SECRET_OAUTH_INTERNAL = data.local_file.tubbyland-preview-secret-oauth-internal.content
-  })
+//   hcl2 {
+//     enabled  = true
+//     allow_fs = false
+//   }
+// }
+// resource "nomad_job" "tubbyland-preview-api" {
+//   jobspec = templatefile(data.local_file.job-tubbyland-preview-api.filename, {
+//     TEMPLATE_SECRET_DB = data.local_file.tubbyland-api-secret-db.content,
+//     TEMPLATE_SECRET_BUCKET_MANAGER = data.local_file.tubbyland-api-secret-bucket-manager.content,
+//     TEMPLATE_SECRET_OBJECT_ADMIN = data.local_file.tubbyland-api-secret-object-admin.content,
+//     TEMPLATE_SECRET_OAUTH_EMAILS = data.local_file.tubbyland-api-secret-emails.content,
+//     TEMPLATE_SECRET_OAUTH_GCP = data.local_file.tubbyland-api-secret-oauth-gcp.content,
+//     TEMPLATE_SECRET_OAUTH_INTERNAL = data.local_file.tubbyland-preview-secret-oauth-internal.content
+//   })
 
-  hcl2 {
-    enabled  = true
-    allow_fs = false
-  }
-}
+//   hcl2 {
+//     enabled  = true
+//     allow_fs = false
+//   }
+// }
 
 # System
 resource "nomad_job" "proxy" {

@@ -140,9 +140,9 @@ resource "vault_generic_secret" "oinkserver-packer" {
   path = "secret/oinkserver/packer"
   data_json = jsonencode(var.packer)
 }
-resource "vault_generic_secret" "oinkserver-domains" {
-  path = "secret/oinkserver/domains"
-  data_json = file("${path.module}/domains.json")
+resource "vault_generic_secret" "oinkserver-proxy" {
+  path = "secret/oinkserver/proxy"
+  data_json = file("${path.module}/data/proxy.json")
 }  
 
 # Tubbyland
