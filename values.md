@@ -2,11 +2,13 @@
 
 ## Chapter 1: Inspiration 
 
-**At the core, we are humans; we have purpose; we are creators.**
+**To survive is to maintain.**
+
+**To live is to create.**
 ___
-- Together, these combine to produce the brightest of all existence: value for another human being.
 - This composition aims to take values as a concept, and convert them into a tangible value proposition.
-- It is up to you to use your skills to execute on this vision.
+- Together, these combine to produce the brightest of all existence: value for another human being.
+- It is up to the individual to use their skills and execute upon this vision.
 
 ## Chapter 2: Cognition
 **Values are naturally developed, not artificially selected.**
@@ -28,9 +30,10 @@ ___
 **Tangible Values:**
 ___
 ### 1. It exists
-### 2. People know that it exists
-### 3. People know that they need it
+### 2. It is known to exist
+### 3. It is needed
 ### 4. It can be used
+### 5. It provides an experience
 
 **Conceptual Values:**
 ___
@@ -54,3 +57,8 @@ ___
 - Being welcoming and inclusive
 - Choosing to use everything available
 - Expanding accessibility before audience
+
+### 5. Intensity
+- Getting lost in time
+- Making life feel real
+- Committing to being all in
