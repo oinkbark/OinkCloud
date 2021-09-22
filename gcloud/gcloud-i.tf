@@ -12,6 +12,13 @@ variable "ssh_public_keys" {
   sensitive = true
 }
 
+// variable "packer_versions" {
+//   default = {
+//     packer = "1.7.4"
+//     digitalocean = "1.0.1"
+//   }
+// }
+
 variable "machine-img-downstream" {
   default = {
     base-deb10 = {
@@ -20,12 +27,20 @@ variable "machine-img-downstream" {
     }
     base-exec = {
       parent = [ "base-deb10" ]
-      children = [ "role-server" ]
+      children = [ "role-server",  "role-client" ]
     }
     role-server = {
       parent = [ "base-exec" ]
       children = []
     }
+    role-client = {
+      parent = [ "base-exec" ]
+      children = []
+    }
+    // role-monolith = {
+    //   parent = [ "role-server", "role-client" ]
+    //   children = []
+    // }
     // role-dev = {
     //   parent = [ "base-exec" ]
     //   children = []

@@ -6,5 +6,5 @@ terraform {
     }
   }
 }
-provider "random" {
-}
+// provider "random" {
+// }

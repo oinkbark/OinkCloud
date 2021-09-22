@@ -59,3 +59,21 @@ variable "tubbyland_db_username" {
   type = string
 }
 
+variable "rtc_db_password" {
+  type = string
+}
+variable "ops_db_password" {
+  type = string
+}
+
+
+##############
+### Consul ###
+##############
+
+# Should be read access only
+variable "consul_digitalocean_token" {
+  type = string
+  # sensitive = true
+}
+

@@ -1,0 +1,126 @@
+{
+  "http": {
+    "oinkcloud.com": {
+      "domains": {
+        "oinkcloud.com": {
+          "paths": {
+            "/": {
+              "redirect": {
+                "url": "https://github.com/oinkbark/OinkCloud"
+              }
+            }
+          }
+        },
+        "nomad.oinkcloud.com": {
+          "paths": {
+            "/": {
+              "service": {
+                "name": "nomad"
+              }
+            }
+          }
+        },
+        "vault.oinkcloud.com": {
+          "paths": {
+            "/": {
+              "protocol": "https",
+              "service": {
+                "name": "vault"
+              }
+            }
+          }
+        },
+        "opspoint.oinkcloud.com": {
+          "paths": {
+            "/": {
+              "protocol": "https",
+              "service": {
+                "name": "ops-neo4j"
+              }
+            }
+          }
+        },
+        "direct.oinkcloud.com": {
+          "direct": true,
+          "dedicatedTLS": true,
+          "paths": {
+            "/": {
+              "teapot": true
+            }
+          }
+        }
+      }
+    },
+    "tubbyland.com": {
+      "domains": {
+        "tubbyland.com": {
+          "paths": {
+            "/": {
+              "service": {
+                "name": "tubbyland-vue3"
+              }
+            }
+          }
+        },
+        "api.tubbyland.com": {
+          "paths": {
+            "/": {
+              "service": {
+                "name": "tubbyland-vue3"
+              }
+            },
+            "/graphql": {
+              "service": {
+                "name": "tubbyland-graphql"
+              }
+            },
+            "/endpoint": {
+              "service": {
+                "name": "tubbyland-graphql"
+              }
+            }
+          }
+        },
+        "assets.tubbyland.com": {
+          "paths": {
+            "/": {
+              "redirect": {
+                "url": "https://storage.googleapis.com/tubbyland.com"
+              }
+            }
+          }
+        },
+        "preview.tubbyland.com": {
+          "paths": {
+            "/": {
+              "service": {
+                "name": "tubbyland-preview-vue3"
+              }
+            },
+            "/graphql": {
+              "service": {
+                "name": "tubbyland-preview-graphql"
+              }
+            },
+            "/endpoint": {
+              "service": {
+                "name": "tubbyland-preview-graphql"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "stream": {
+    "oinkcloud.com": {
+      "domains": {
+        "direct.oinkcloud.com": {
+          "7687": {
+            "service": "ops-neo4j-bolt"
+          }
+        }
+      }
+    }
+  }
+}

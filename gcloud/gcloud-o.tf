@@ -29,6 +29,23 @@ output "consul-ca-crt" {
   sensitive = true
   value = data.google_secret_manager_secret_version.consul-ca-crt.secret_data
 }
+
+output "nw-us-vault-root" {
+  sensitive = true
+  value = data.google_secret_manager_secret_version.nw-us-vault-root.secret_data
+}
+output "nw-us-nomad-root" {
+  sensitive = true
+  value = data.google_secret_manager_secret_version.nw-us-nomad-root.secret_data
+}
+output "nw-us-consul-ca-crt" {
+  sensitive = true
+  value = data.google_secret_manager_secret_version.nw-us-consul-ca-crt.secret_data
+}
+output "nw-us-consul-ca-key" {
+  sensitive = true
+  value = data.google_secret_manager_secret_version.nw-us-consul-ca-key.secret_data
+}
 output "vault-roles" {
   value = {
     artifact-reader = google_project_iam_custom_role.artifact-reader.id

@@ -3,14 +3,7 @@ terraform {
   required_providers {
     digitalocean = {
       source = "digitalocean/digitalocean"
-      version = "2.5.1"
-    }
-  }
-  backend "remote" {
-    organization = "OinkBark"
-
-    workspaces {
-      name = "terraform"
+      version = "2.11.1"
     }
   }
 }

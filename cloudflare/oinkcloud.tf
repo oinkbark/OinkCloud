@@ -45,6 +45,20 @@ resource "cloudflare_record" "oinkcloud-vault" {
   value = var.proxy_droplet
   proxied = true
 }
+resource "cloudflare_record" "oinkcloud-opspoint" {
+  zone_id = cloudflare_zone.oinkcloud.id
+  type = "A"
+  name = "opspoint"
+  value = var.proxy_droplet
+  proxied = true
+}
+resource "cloudflare_record" "oinkcloud-direct" {
+  zone_id = cloudflare_zone.oinkcloud.id
+  type = "A"
+  name = "direct"
+  value = var.proxy_droplet
+  proxied = false
+}
 // resource "cloudflare_record" "oinkcloud-vpn" {
 //   zone_id = cloudflare_zone.oinkcloud.id
 //   type = "A"

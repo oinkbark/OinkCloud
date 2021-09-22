@@ -1,0 +1,31 @@
+{{ define "nginx-stream" }}
+  {{ range $namespaceKey, $namespaceValue := .stream }}
+    {{ range $domainKey, $domainValue := $namespaceValue.domains }}
+
+      {{ range $streamPortKey, $streamPortValue := $domainValue }}
+        server {
+
+          listen *:{{ $streamPortKey }} ssl;
+          listen [::]:{{ $streamPortKey }} ssl;
+
+          {{ with service (print $streamPortValue.service) }}
+          {{ with index . 0 }}
+          set $upstream {{ (print .NodeAddress ":" .Port) }};
+          {{ end }}
+          {{ end }}
+
+          proxy_pass $upstream;
+      
+          ssl_certificate letsencrypt/live/{{ $domainKey }}/fullchain.pem;
+          ssl_certificate_key letsencrypt/live/{{ $domainKey }}/privkey.pem;
+        }
+
+      {{ end }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ with secret "secret/oinkserver/proxy" }}
+{{ $namespaces := .Data.data }}
+{{ executeTemplate "nginx-stream" $namespaces }}
+{{ end }}

@@ -3,19 +3,11 @@ terraform {
   required_providers {
     google = {
       source = "hashicorp/google"
-      version = "3.60.0"
+      version = "3.85.0"
     }
     google-beta = {
       source = "hashicorp/google-beta"
-      version = "3.60.0"
-    }
-  }
-
-  backend "remote" {
-    organization = "OinkBark"
-
-    workspaces {
-      name = "terraform"
+      version = "3.85.0"
     }
   }
 }

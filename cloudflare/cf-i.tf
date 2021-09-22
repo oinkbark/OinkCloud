@@ -2,6 +2,8 @@ variable "tf_cloudflare_token" {
 }
 variable "proxy_droplet" {
 }
+variable "worker_droplet" {
+}
 variable "tubbyland" {
   type = object({
     domain_name = string

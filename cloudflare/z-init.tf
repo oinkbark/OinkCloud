@@ -3,14 +3,7 @@ terraform {
   required_providers {
     cloudflare = {
       source = "cloudflare/cloudflare"
-      version = "2.19.2"
-    }
-  }
-  backend "remote" {
-    organization = "OinkBark"
-
-    workspaces {
-      name = "terraform"
+      version = "2.27.0"
     }
   }
 }

@@ -285,7 +285,8 @@ resource "google_secret_manager_secret" "vault-verifier" {
     automatic = true
   }
 }
-# Value filled by machine at runtime
+# Values filled by machine at runtime (each are region specific)
+## These MUST exist before a role-server image can fill them
 resource "google_secret_manager_secret" "vault-root" {
   secret_id = "VAULT_ROOT"
 
@@ -307,6 +308,34 @@ resource "google_secret_manager_secret" "consul-ca-crt" {
     automatic = true
   }
 }
+resource "google_secret_manager_secret" "nw-us-vault-root" {
+  secret_id = "NW-US_VAULT_ROOT"
+
+  replication {
+    automatic = true
+  }
+}
+resource "google_secret_manager_secret" "nw-us-nomad-root" {
+  secret_id = "NW-US_NOMAD_ROOT"
+
+  replication {
+    automatic = true
+  }
+}
+resource "google_secret_manager_secret" "nw-us-consul-ca-crt" {
+  secret_id = "NW-US_CONSUL_CA_CRT"
+
+  replication {
+    automatic = true
+  }
+}
+resource "google_secret_manager_secret" "nw-us-consul-ca-key" {
+  secret_id = "NW-US_CONSUL_CA_KEY"
+
+  replication {
+    automatic = true
+  }
+}
 
   # key = google_service_account_key.vault-unseal.private_key,
   // secret_data = templatefile("${path.module}/credentials.tmpl", {
@@ -316,11 +345,11 @@ resource "google_secret_manager_secret" "consul-ca-crt" {
   //   client-id = google_service_account.vault-unseal.unique_id
   // })
 # Packer Build Time
-resource "google_secret_manager_secret_version" "v1-digitalocean-token" {
+resource "google_secret_manager_secret_version" "digitalocean-token" {
   secret = google_secret_manager_secret.digitalocean-token.id
   secret_data = var.digitalocean_token
 }
-resource "google_secret_manager_secret_version" "v1-ssh-public-keys" {
+resource "google_secret_manager_secret_version" "ssh-public-keys" {
   secret = google_secret_manager_secret.ssh-public-keys.id
   secret_data = var.ssh_public_keys
 }
@@ -352,7 +381,7 @@ resource "google_storage_bucket" "build-manifests" {
   }
 }
 
-
+# Set env PACKER_GITHUB_API_TOKEN (limit of 1 pull per hour for plugins)
 resource "google_cloudbuild_trigger" "machine-img-build-chain" {
   for_each = var.machine-img-downstream
 
@@ -417,6 +446,16 @@ resource "google_cloudbuild_trigger" "machine-img-build-chain" {
       ]
     }
 
+    # Initalize Packer builder sources
+    step {
+      name = "hashicorp/packer:light"
+      dir = "/workspace/${each.key}"
+      entrypoint = "bash"
+      args = [
+        "-c",
+        "packer init ${each.key}.pkr.hcl"
+      ]
+    }
     # Build parent
     # grep -oP "artifact_id": ".*:(.*)" | cut -d ":" -f2
     # sed -n 's/.*"artifact_id": ".*:\(.*\)".*/\1/p'
