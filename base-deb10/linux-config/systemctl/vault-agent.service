@@ -2,9 +2,12 @@
 Description="HashiCorp Vault Agent - A tool for receiving secrets"
 Documentation=https://www.vaultproject.io/docs/
 Requires=network-online.target nftables.service
+Before=docker.service nomad.service
 After=network-online.target
 
 [Service]
+ConditionDirectoryNotEmpty=/etc/vault.d
+ConditionPathExists=/root/OinkServer/env/vault-agent.conf
 ExecStart=/usr/local/bin/vault agent -config=/etc/vault.d/vault-agent.hcl
 ExecReload=/bin/kill --signal HUP $MAINPID
 KillMode=process

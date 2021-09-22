@@ -5,6 +5,8 @@ Requires=network-online.target nftables.service
 After=network-online.target
 
 [Service]
+ConditionDirectoryNotEmpty=/etc/consul.d
+ConditionPathExists=/root/OinkServer/env/consul.conf
 ExecStart=/usr/local/bin/consul agent --config-dir /etc/consul.d
 ExecReload=/usr/local/bin/consul reload
 ExecStop=/usr/local/bin/consul leave

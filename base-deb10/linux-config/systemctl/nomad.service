@@ -6,6 +6,8 @@ After=network-online.target consul.service
 StartLimitBurst=3
 
 [Service]
+ConditionDirectoryNotEmpty=/etc/nomad.d
+ConditionPathExists=/root/OinkServer/env/nomad.conf
 ExecStart=/usr/local/bin/nomad agent --config /etc/nomad.d
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process

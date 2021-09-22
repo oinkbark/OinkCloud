@@ -1,6 +1,7 @@
 [Unit]
 Description=Docker Application Container Engine
 Documentation=https://docs.docker.com
+Before=nomad.service
 After=network-online.target nftables.service containerd.service vault-agent.service
 Wants=network-online.target
 Requires=docker.socket containerd.service
@@ -10,10 +11,11 @@ StartLimitBurst=3
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
-ExecReload=/usr/sbin/nft flush ruleset
-ExecReload=/usr/sbin/nft -f /etc/nftables.conf
-ExecReload=/bin/kill -HUP $MAINPID
+ConditionPathExists=/etc/docker/daemon.json
+ConditionPathExists=/root/OinkServer/env/docker.conf
+ConditionPathExists=/root/OinkServer/runtime/docker-auth.json
+ExecStart=/usr/bin/dockerd --config-file /etc/docker/daemon.json
+ExecReload=/usr/bin/echo "Cannot restart Docker without reboot (firewall)"
 TimeoutSec=0
 RestartSec=2
 Restart=always

@@ -4,6 +4,7 @@ Documentation=https://axkibe.github.io/lsyncd/
 
 [Service]
 Type=forking
+ConditionPathExists=/etc/lsyncd.conf
 ExecStart=/usr/bin/lsyncd /etc/lsyncd.conf
 
 [Install]

@@ -1,0 +1,6 @@
+{
+  "containerd": "/run/containerd/containerd.sock",
+  "hosts": [
+    "fd://"
+  ]
+}

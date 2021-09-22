@@ -5,6 +5,7 @@ variable "parent_image_id" {
 variable "digitalocean_token" {
 }
 
+
 source "digitalocean" "base-deb10" {
   ## Required ##
   api_token = var.digitalocean_token
@@ -27,13 +28,14 @@ build {
   sources = [
     "source.digitalocean.base-deb10"
   ]
+  # Injected from GCloud Build
   provisioner "file" {
     source = "/workspace/ssh_public_keys.txt"
     destination = ".ssh/oink.authorized_keys"
   }
   provisioner "file" {
     sources = [ "./linux-config/systemctl/" ]
-    destination = "/usr/lib/systemd/system/"
+    destination = "/usr/lib/systemd/system"
   }
   provisioner "file" {
     sources = [ "./linux-config/etc/direct/" ]
@@ -42,6 +44,11 @@ build {
   provisioner "file" {
     source = "./linux-config/etc/resolv.conf"
     destination = "/etc/resolvconf/resolv.conf.d/head"
+  }
+  # Do not allow initscripts to manage services through invoke-rc.d calls
+  provisioner "file" {
+    source = "./linux-config/policy-rc.d"
+    destination = "/usr/sbin/"
   }
   provisioner "shell" {
     inline = [
@@ -66,5 +73,15 @@ build {
   }
   post-processor "manifest" {
     output = "/workspace/manifest.json"
+  }
+}
+
+packer {
+  required_version = ">= 1.7.4"
+  required_plugins {
+    digitalocean = {
+      version = ">= 1.0.1"
+      source  = "github.com/hashicorp/digitalocean"
+    }
   }
 }

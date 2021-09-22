@@ -7,14 +7,8 @@ StartLimitIntervalSec=60
 StartLimitBurst=3
 
 [Service]
-ProtectSystem=full
-ProtectHome=read-only
-PrivateTmp=yes
-PrivateDevices=yes
-SecureBits=keep-caps
-AmbientCapabilities=CAP_IPC_LOCK
-CapabilityBoundingSet=CAP_SYSLOG CAP_IPC_LOCK
-NoNewPrivileges=yes
+ConditionDirectoryNotEmpty=/etc/vault.d
+ConditionPathExists=/root/OinkServer/env/vault-server.conf
 ExecStart=/usr/local/bin/vault server -config=/etc/vault.d/vault-server.hcl
 ExecReload=/bin/kill --signal HUP $MAINPID
 KillMode=process
@@ -24,6 +18,14 @@ RestartSec=5
 TimeoutStopSec=30
 LimitNOFILE=65536
 LimitMEMLOCK=infinity
+ProtectSystem=full
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+SecureBits=keep-caps
+AmbientCapabilities=CAP_IPC_LOCK
+CapabilityBoundingSet=CAP_SYSLOG CAP_IPC_LOCK
+NoNewPrivileges=yes
 EnvironmentFile=/root/OinkServer/env/vault-server.conf
 StandardOutput=file:/var/log/oinkserver/vault-server.stdout.log
 StandardError=file:/var/log/oinkserver/vault-server.stderr.log
