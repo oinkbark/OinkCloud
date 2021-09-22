@@ -1,19 +1,20 @@
 - hosts: 127.0.0.1
   connection: local
   tasks:
-    # To do: have tf use vault provider to generate and inject temp auth token
-    # - then convert back to using bash instead of SDK    gcloud auth activate-service-account --key-file
     - name: Login to GCloud
       ansible.builtin.command:
         cmd: gcloud auth activate-service-account --project {{ GCP_PROJECT }} --key-file="{{ mount_path }}/terraform-persist/secret-writer.json"
   
     - name: Write Vault root token to GCloud Secret Manager
       ansible.builtin.command:
-        cmd: gcloud secrets versions add VAULT_ROOT --data-file="{{ mount_path }}/vault-persist/root_token"
+        cmd: gcloud secrets versions add {{ oinkcloud_region | upper }}_VAULT_ROOT --data-file="{{ mount_path }}/vault-persist/root_token"
     - name: Write Nomad root token to GCloud Secret Manager
       ansible.builtin.command:
-        cmd: gcloud secrets versions add NOMAD_ROOT --data-file="{{ mount_path }}/nomad-persist/root_token"
+        cmd: gcloud secrets versions add {{ oinkcloud_region | upper }}_NOMAD_ROOT --data-file="{{ mount_path }}/nomad-persist/root_token"
   
-    - name: Write Consul CA crt to GCloud Secret Manager
+    - name: Write Consul CA public crt to GCloud Secret Manager
       ansible.builtin.command:
-        cmd: gcloud secrets versions add CONSUL_CA_CRT --data-file="/root/OinkServer/openssl/server.dc1.consul-ca.crt"
+        cmd: gcloud secrets versions add {{ oinkcloud_region | upper }}_CONSUL_CA_CRT --data-file="{{ mount_path }}/vault-persist/server.dc1.consul-ca.crt"
+    - name: Write Consul CA private key to GCloud Secret Manager
+      ansible.builtin.command:
+        cmd: gcloud secrets versions add {{ oinkcloud_region | upper }}_CONSUL_CA_KEY --data-file="{{ mount_path }}/vault-persist/server.dc1.consul-ca.key"

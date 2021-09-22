@@ -1,8 +1,12 @@
 - name: CA Private Key
   ansible.builtin.command:
-    cmd: 'openssl genrsa -out /root/OinkServer/openssl/{{ item }}-ca.key 2048'
-    creates: /root/OinkServer/openssl/{{ item }}-ca.key
-- name: CA Public Certificate
+    cmd: 'openssl genpkey -algorithm ed25519 -out {{ mount_path }}/vault-persist/{{ item }}-ca.key'
+    creates: '{{ mount_path }}/vault-persist/{{ item }}-ca.key'
+- name: CA Public Root Certificate
   ansible.builtin.command:
-    cmd: 'openssl req -x509 -new -nodes -key /root/OinkServer/openssl/{{ item }}-ca.key -sha256 -days 3650 -out /root/OinkServer/openssl/{{ item }}-ca.crt -subj "/C=US/ST=WA/L=SEATTLE/O=HashiCorp/CN={{ item }}"'
-    creates: /root/OinkServer/openssl/{{ item }}-ca.crt
+    cmd: 'openssl req -x509 -new -nodes -key /root/OinkServer/openssl/{{ item }}-ca.key -sha256 -days 3650 -out /{{ mount_path }}/vault-persist/{{ item }}-ca.crt -subj "/C=US/ST=WA/L=SEATTLE/O=HashiCorp/CN={{ item }}"'
+    creates: '{{ mount_path }}/vault-persist/{{ item }}-ca.crt'
+- name: Trust CA Public Root Certificate
+  ansible.builtin.shell:
+    cmd: 'cp {{ mount_path }}/vault-persist/{{ item }}-ca.crt /usr/local/share/ca-certificates/ && update-ca-certificates'
+    creates: /usr/local/share/ca-certificates/{{ item }}-ca.crt

@@ -3,15 +3,21 @@
 
 data_dir = ""
 
+consul {
+  address = "169.254.1.1:8500"
+}
+vault {
+  enabled = true
+  address = "https://vault.service.consul:8200"
+}
 server {
   enabled = true
-  # How many servers are expected
-  # If set to 1, this server self elects itself as the leader
+  # This server self elects itself as the leader
   bootstrap_expect = 1
-  # log_level = "INFO"
-
   # Upgrade protocol for autopilot
   raft_protocol = 3
+  # log_level = "INFO"
+
 }
 
 // tls {

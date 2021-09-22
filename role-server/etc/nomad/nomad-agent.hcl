@@ -7,20 +7,15 @@ bind_addr = "0.0.0.0"
 // addresses {
 //   http = "{{ GetPublicIP }}"
 // }
-// advertise {
-//   http = "{{ GetPublicIP }}"
-// }
+advertise {
+  http = "{{ GetInterfaceIP `eth1` }}"
+  rpc = "{{ GetInterfaceIP `eth1` }}"
+  serf = "{{ GetInterfaceIP `eth1` }}"
+}
 acl {
   enabled = true
 }
 
-consul {
-  address = "169.254.1.1:8500"
-}
-vault {
-  enabled = true
-  address = "https://vault.service.consul:8200"
-}
 // tls {
 //   http = true
 

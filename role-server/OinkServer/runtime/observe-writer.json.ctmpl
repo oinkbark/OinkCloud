@@ -1,3 +1,0 @@
-{{ with secret "gcp/key/observe-writer" }}
-{{ .Data.private_key_data | base64Decode }}
-{{ end }}

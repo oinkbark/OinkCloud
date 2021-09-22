@@ -7,34 +7,21 @@
         regexp: '^IP.3 = 0.0.0.0'
         line: 'IP.3 = {{ ansible_default_ipv4.address }}'
         state: present
-    - name: Add public IP to Vault agent CSR request
-      ansible.builtin.lineinfile: 
-        path: /root/OinkServer/openssl/agent.consul-csr.conf
-        regexp: '^IP.3 = 0.0.0.0'
-        line: 'IP.3 = {{ ansible_default_ipv4.address }}'
-        state: present
     - name: Generate HashiCorp CA certificates
-      include_tasks: gen-ca.tasks.yml
+      ansible.builtin.include_tasks: gen-ca.tasks.yml
       loop: 
         - server.dc1.consul
         # - server.global.nomad
     - name: Generate HashiCorp TLS certificates
-      include_tasks: gen-tls.tasks.yml
+      ansible.builtin.include_tasks: gen-tls.tasks.yml
       loop:
-        # Consul CA
+        # Consul CA for Vault Server
+        ## This is used by Terraform to connect
         - ca: server.dc1.consul 
           tls: service.consul
-        - ca: server.dc1.consul 
-          tls: agent.consul
-        # - ca: server.dc1.consul 
-        #   tls: server.dc1.consul
-        # - ca: server.dc1.consul 
-        #   tls: client.dc1.consul
-        # Nomad CA
+        # Nomad CA for Nomad Server
         # - ca: server.global.nomad 
         #  tls: server.global.nomad
-        #- ca: server.global.nomad 
-        #  tls: client.global.nomad
       loop_control:
         label: "{{ item.tls }}"
 

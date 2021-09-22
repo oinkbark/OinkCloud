@@ -1,14 +1,14 @@
 - name: TLS Private Key
   ansible.builtin.command:
-    cmd: 'openssl genrsa -out /root/OinkServer/openssl/{{ item.tls }}-tls.key 2048'
+    cmd: 'openssl genpkey -algorithm ed25519 -out /root/OinkServer/openssl/{{ item.tls }}-tls.key'
     creates: /root/OinkServer/openssl/{{ item.tls }}-tls.key
 - name: TLS CSR
   ansible.builtin.command:
     cmd: 'openssl req -new -key /root/OinkServer/openssl/{{ item.tls }}-tls.key -subj "/CN={{ item.tls }}" -out /root/OinkServer/openssl/{{ item.tls }}-tls.csr -config /root/OinkServer/openssl/{{ item.tls }}-csr.conf'
     creates: /root/OinkServer/openssl/{{ item.tls }}-tls.csr
-- name: TLS Signature from CA
+- name: TLS Signature from Root CA
   ansible.builtin.command:
-    cmd: 'openssl x509 -req -in /root/OinkServer/openssl/{{ item.tls }}-tls.csr -CA /root/OinkServer/openssl/{{ item.ca }}-ca.crt -CAkey /root/OinkServer/openssl/{{ item.ca }}-ca.key -CAcreateserial -out /root/OinkServer/openssl/{{ item.tls }}-tls.crt -days 3650 -sha256 -extfile /root/OinkServer/openssl/{{ item.tls }}-csr.conf -extensions v3_req'
+    cmd: 'openssl x509 -req -in /root/OinkServer/openssl/{{ item.tls }}-tls.csr -CA {{ mount_path }}/vault-persist/{{ item.ca }}-ca.crt -CAkey {{ mount_path }}/vault-persist/{{ item.ca }}-ca.key -CAcreateserial -out /root/OinkServer/openssl/{{ item.tls }}-tls.crt -days 3650 -sha256 -extfile /root/OinkServer/openssl/{{ item.tls }}-csr.conf -extensions v3_req'
     creates: /root/OinkServer/openssl/{{ item.tls }}-tls.crt
 
 - name: Trust TLS certificate

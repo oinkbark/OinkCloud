@@ -10,7 +10,7 @@ source "digitalocean" "machine-image" {
   api_token = var.digitalocean_token
   image = var.parent_image_id
   region = "sfo3"
-  size = "s-1vcpu-2gb"
+  size = "s-1vcpu-1gb"
   
   ## Optional ##
   snapshot_name = "role-server"
@@ -44,5 +44,15 @@ build {
   }
   post-processor "manifest" {
     output = "/workspace/manifest.json"
+  }
+}
+
+packer {
+  required_version = ">= 1.7.3"
+  required_plugins {
+    digitalocean = {
+      version = ">= 1.0.0"
+      source  = "github.com/hashicorp/digitalocean"
+    }
   }
 }

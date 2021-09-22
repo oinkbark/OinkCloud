@@ -1,12 +1,15 @@
 - name: Generate Runtime Keys
-  include: gen-keys.yml
+  ansible.builtin.import_playbook: gen-keys.yml
 
 - name: Setup Vault Server
-  include: vault-server.yml
+  ansible.builtin.import_playbook: vault-server.yml
 - name: Setup Consul Server
-  include: consul-server.yml
+  ansible.builtin.import_playbook: consul-server.yml
 - name: Setup Nomad Server
-  include: nomad-server.yml
+  ansible.builtin.import_playbook: nomad-server.yml
 
 - name: Save HashiCorp Root Keys
-  include: root-save.yml
+  ansible.builtin.import_playbook: root-save.yml
+
+- name: Cleanup SSH key files
+  ansible.builtin.import_playbook: shared/clean-ssh.runtime.yml

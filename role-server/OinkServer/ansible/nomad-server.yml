@@ -1,7 +1,7 @@
 - hosts: 127.0.0.1
   connection: local
   tasks:
-    - name: Set Vault token for Nomad usage
+    - name: Set Vault token for Nomad Server usage
       ansible.builtin.lineinfile: 
         path: /root/OinkServer/env/nomad.conf
         regexp: 'VAULT_TOKEN'

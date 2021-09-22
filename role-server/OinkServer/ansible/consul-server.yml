@@ -1,12 +1,6 @@
 - hosts: 127.0.0.1
   connection: local
   tasks:
-    - name: Set Vault token for Consul usage
-      ansible.builtin.lineinfile: 
-        path: /root/OinkServer/env/consul.conf
-        regexp: 'VAULT_TOKEN'
-        line: VAULT_TOKEN="{{ lookup('file', mount_path + '/vault-persist/root_token') }}"
-        state: present
     - name: Set Consul data dir
       ansible.builtin.lineinfile: 
         path: /etc/consul.d/consul-server.hcl
