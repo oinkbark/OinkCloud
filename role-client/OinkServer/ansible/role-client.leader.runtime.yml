@@ -1,0 +1,25 @@
+- name: Mount Volumes
+  ansible.builtin.import_playbook: shared/mount-volumes.runtime.yml
+
+- name: Verify Letsencrypt Volume
+  ansible.builtin.import_playbook: letsencrypt.runtime.yml
+
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Generate DHparam
+      ansible.builtin.command:
+        creates: /root/OinkServer/openssl/dhparam.pem
+        cmd: openssl dhparam -out /root/OinkServer/openssl/dhparam.pem 2048
+
+    - name: Disable Consul Template File Sandbox
+      ansible.builtin.lineinfile: 
+        path: /etc/nomad.d/nomad-client.hcl
+        regexp: "disable_file_sandbox = false"
+        line: "disable_file_sandbox = true"
+        state: present
+
+- name: Setup worker requirements
+  vars:
+    node_class: leader
+  ansible.builtin.import_playbook: role-client.worker.runtime.yml

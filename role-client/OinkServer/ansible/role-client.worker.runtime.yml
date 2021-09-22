@@ -1,0 +1,62 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+
+  - name: Trust root CA cert injected by Terraform
+    ansible.builtin.shell:
+      cmd: 'cp /root/OinkServer/runtime/server.dc1.consul-ca.crt /usr/local/share/ca-certificates/ && update-ca-certificates'
+      creates: /usr/local/share/ca-certificates/server.dc1.consul-ca.crt
+
+  - name: Set Consul data dir
+    ansible.builtin.lineinfile: 
+      path: /etc/consul.d/consul-client.hcl
+      regexp: 'retry_join ='
+      line: "retry_join = [ \"provider=digitalocean region={{ provider_region }} tag_name={{ oinkcloud_region }}-server api_token={{ lookup('file','{{ provider_token_path }}') }}\" ]"
+      state: present
+  - name: Reload Consul Config
+    ansible.builtin.systemd:
+      name: consul.service
+      state: restarted
+      enabled: yes
+      daemon_reload: yes
+
+  - name: Reload Vault agent config
+    ansible.builtin.systemd:
+      name: vault-agent.service
+      state: restarted
+      enabled: yes
+      daemon_reload: yes
+
+  - name: Set Docker Container DNS Resolver as Host
+    ansible.builtin.replace: 
+      path: "/etc/docker/daemon.json"
+      regexp: 'X.X.X.X'
+      replace: "{{ ansible_eth0.ipv4.address }}"
+
+  - name: Set Nomad node class
+    ansible.builtin.lineinfile: 
+      path: /etc/nomad.d/nomad-client.hcl
+      regexp: 'node_class ='
+      line: "node_class = \"{{ node_class | default('worker') }}\""
+      state: present
+  - name: Reload Nomad config
+    ansible.builtin.systemd:
+      name: nomad.service
+      state: restarted
+      enabled: yes
+      daemon_reload: yes
+    
+  # Cannot start until Vault agent has placed the secrets
+  - name: Reload Docker
+    ansible.builtin.systemd:
+      name: docker.service
+      state: stopped
+      enabled: yes
+      daemon_reload: yes
+    register: result
+    until: result is not failed
+    retries: 10
+    delay: 6
+
+- name: Cleanup SSH key files
+  ansible.builtin.import_playbook: shared/clean-ssh.runtime.yml

@@ -1,0 +1,59 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    # This mount is required for TLS certificates
+    - name: Verify volume mount state
+      ansible.builtin.stat:
+        path: "{{ mount_path }}"
+      register: result
+      failed_when: not result.stat.exists
+
+    # Will be accessed by lsyncd (root) and certbot (root)
+    - name: Verify Certbot Letsencrypt Directory 01
+      ansible.builtin.file:
+        path: "{{ mount_path }}/etc/letsencrypt"
+        state: directory
+        mode: 0700
+        group: root
+        owner: root
+    - name: Verify Certbot Letsencrypt Directory 02
+      ansible.builtin.file:
+        path: "{{ mount_path }}/etc/letsencrypt/live"
+        state: directory
+    - name: Create Certbot Letsencrypt File 01
+      ansible.builtin.copy:
+        force: no
+        content: ""
+        dest: "{{ mount_path }}/etc/letsencrypt/last-renew"
+    # Will be accessed by NGINX through lsyncd mirror (www-data)
+    # Otherwise, it would not be able to access this dir based on parent owner + perms
+    - name: Verify Nginx Letsencrypt Directory 01
+      ansible.builtin.file:
+        path: "{{ mount_path }}/etc/letsencrypt/oinkserver"
+        state: directory
+        mode: 0700
+        group: www-data
+        owner: www-data
+    - name: Verify Nginx Letsencrypt Directory 02
+      ansible.builtin.file:
+        path: "{{ mount_path }}/etc/letsencrypt/oinkserver/live"
+        state: directory
+
+    - name: Add Mount Path to Inbox
+      ansible.builtin.replace: 
+        path: "/root/OinkServer/inbox/{{ item }}"
+        regexp: "<MOUNT>"
+        replace: "{{ mount_path }}"
+      loop:
+        - lsyncd.conf
+    - name: Move Inbox to Destination
+      ansible.builtin.copy:
+        src: "/root/OinkServer/inbox/{{ item }}"
+        dest: "/etc/{{ item }}"
+      loop:
+        - lsyncd.conf
+    - name: Enable Lsyncd
+      ansible.builtin.systemd:
+        name: lsyncd.service
+        state: started
+        enabled: yes
