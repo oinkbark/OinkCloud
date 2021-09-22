@@ -2,10 +2,10 @@
   connection: local
   vars:
     # Software Packages
-    consul_version: "1.9.3"
-    consul_template_version: "0.25.2"
-    vault_version: "1.6.3"
-    nomad_version: "1.0.4"
+    consul_version: "1.10.2"
+    consul_template_version: "0.27.0"
+    vault_version: "1.8.2"
+    nomad_version: "1.1.4"
 
     # System
     debian_codename: buster
@@ -18,7 +18,12 @@
       become: yes
       become_user: root
       block:
-
+        
+        - name: Verify File Executable
+          ansible.builtin.file:
+            path: /usr/sbin/policy-rc.d
+            state: file
+            mode: 0555
         - name: Verify OinkServer Directories
           ansible.builtin.file:
             path: "{{ item }}"
@@ -28,36 +33,12 @@
             - /root/OinkServer/openssl
             - /root/OinkServer/env
             - /root/OinkServer/downloads
+            - /root/OinkServer/inbox
         - name: Verify SSH Directory
           ansible.builtin.file:
             path: .ssh
             state: directory
             mode: 0660
-        # Will be accessed by lsyncd (root) and certbot (root)
-        - name: Verify Certbot Letsencrypt Directory 01
-          ansible.builtin.file:
-            path: /etc/letsencrypt
-            state: directory
-            mode: 0700
-            group: root
-            owner: root
-        - name: Verify Certbot Letsencrypt Directory 02
-          ansible.builtin.file:
-            path: /etc/letsencrypt/live
-            state: directory
-        # Will be accessed by NGINX through lsyncd mirror (www-data)
-        # Otherwise, it would not be able to access this dir based on parent owner + perms
-        - name: Verify Nginx Letsencrypt Directory 01
-          ansible.builtin.file:
-            path: /etc/letsencrypt/oinkserver
-            state: directory
-            mode: 0700
-            group: www-data
-            owner: www-data
-        - name: Verify Nginx Letsencrypt Directory 02
-          ansible.builtin.file:
-            path: /etc/letsencrypt/oinkserver/live
-            state: directory
         - name: Verify HashiCorp Directories
           ansible.builtin.file:
             path: "{{ item }}"
@@ -66,13 +47,14 @@
             # Consul
             - /etc/consul.d
             - /opt/consul
-            - /opt/cni/bin
             # Vault
-            - /etc/vault.d/config
-            - /etc/vault.d/tls
+            - /etc/vault.d
             # Nomad
             - /etc/nomad.d
             - /opt/nomad
+            # CNI (Container Networking)
+            # - /opt/cni/bin
+            # - /opt/cni/config
 
         - name: Verify Groups
           ansible.builtin.group:
@@ -99,6 +81,20 @@
             state: started
             name: resolvconf.service
 
+        - name: Hosts File
+          ansible.builtin.lineinfile: 
+            path: "{{ item }}"
+            insertafter: "127.0.0.1 localhost"
+            line: "169.254.1.1 consul"
+            state: present
+          loop:
+            - /etc/hosts
+            - /etc/cloud/templates/hosts.debian.tmpl
+        - name: Preserve Service File
+          ansible.builtin.copy:
+            src: /usr/lib/systemd/system/docker.service
+            dest: /root/OinkServer/inbox/docker.service
+
         - name: Attempt to prevent APT locks from blocking execution
           ansible.builtin.systemd:
             state: stopped
@@ -111,10 +107,7 @@
             - apt-daily-upgrade.service
         - name: Same as prior
           ansible.builtin.command:
-            cmd: "{{ item }}"
-          loop:
-            - pkill -f apt
-            - pkill -f apt-get
+            cmd: pkill -f apt
 
         - name: Docker and GCloud APT key
           ansible.builtin.apt_key:
@@ -167,7 +160,7 @@
         # - name: Install Consul/Nomad CNI Plugins
         #   ansible.builtin.unarchive:
         #     remote_src: yes
-        #     src: https://github.com/containernetworking/plugins/releases/download/v0.8.7/cni-plugins-linux-amd64-v0.8.7.tgz
+        #     src: https://github.com/containernetworking/plugins/releases/download/v{{ cni_version }}/cni-plugins-linux-amd64-v{{ cni_version }}.tgz
         #     #checksum: "sha256: https://github.com/containernetworking/plugins/releases/download/v0.8.7/cni-plugins-linux-amd64-v0.8.7.tgz.sha256"
         #     dest: /opt/cni/bin
         #     mode: 0770
@@ -218,7 +211,6 @@
           until: result is not failed
           retries: 100
           delay: 10
-          
         
         # Must be done after ALL packages are installed
         - name: Verify OS/Kernel Version
@@ -228,6 +220,11 @@
           until: result is not failed
           retries: 100
           delay: 10
+
+        - name: Apply Preserved Service File
+          ansible.builtin.copy:
+            src: /root/OinkServer/inbox/docker.service
+            dest: /usr/lib/systemd/system/docker.service
 
         - name: Load New Service Files
           ansible.builtin.systemd:
@@ -255,31 +252,25 @@
             name: networking.service
             state: started
             enabled: yes
-        - name: Enable Lsyncd
-          ansible.builtin.systemd:
-            name: lsyncd.service
-            state: started
-            enabled: yes
         - name: Disable Transparent Hugepages
           ansible.builtin.systemd:
             name: disable-thp.service
             state: started
             enabled: yes
-        # Must be started before Nomad
         # Stopped; Do not have registry or observe keys yet
-        - name: Enable Docker
+        - name: Disable Docker
           ansible.builtin.systemd:
             name: docker.service
             state: stopped
-            enabled: yes
+            enabled: no
         # Stopped; Do not have config files yet
         - name: Enable Consul
           ansible.builtin.systemd:
             name: consul.service
             state: stopped
-            enabled: yes
+            enabled: no
         - name: Enable Nomad
           ansible.builtin.systemd:
             name: nomad.service
             state: stopped
-            enabled: yes
+            enabled: no

@@ -1,0 +1,20 @@
+- name: Verify mount point directory exists
+  ansible.builtin.file:
+    path: "/mnt/{{ device_name }}"
+    state: directory
+- name: Mount volume filesystem to mount point
+  ansible.builtin.command: 
+    cmd: "mount -o discard,defaults,noatime {{ device_path }} /mnt/{{ device_name }}"
+  register: mount_result
+  failed_when:
+    - mount_result.rc == 1
+    - '"already mounted" not in mount_result.stderr'
+- name: Change fstab to automount after a reboot
+  ansible.builtin.lineinfile: 
+    path: /etc/fstab
+    regexp: "{{ device_path }}"
+    line: "{{ device_path }} /mnt/{{ device_name }} xfs defaults,nofail,discard 0 0"
+    state: present
+- name: Expand xfs mount if possible
+  ansible.builtin.command: 
+    cmd: "xfs_growfs /mnt/{{ device_name }}"

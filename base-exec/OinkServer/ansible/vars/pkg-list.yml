@@ -7,9 +7,13 @@ packages:
   - "resolvconf"
   # Filesystem Management
   - "xfsprogs"
+  - "inotify-tools"
   # Docker Community Edition
+  # Must be able to run without errors to install
   - "docker-ce"
   - "docker-ce-cli"
   - "containerd.io"
   # GCloud
   - "google-cloud-sdk"
+  # JSON output modifier
+  - "jq"

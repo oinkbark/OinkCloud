@@ -4,6 +4,7 @@ variable "parent_image_id" {
 variable "digitalocean_token" {
 }
 
+
 source "digitalocean" "base-exec" {
   ## Required ##
   api_token = var.digitalocean_token
@@ -41,5 +42,15 @@ build {
   }
   post-processor "manifest" {
     output = "/workspace/manifest.json"
+  }
+}
+
+packer {
+  required_version = ">= 1.7.4"
+  required_plugins {
+    digitalocean = {
+      version = ">= 1.0.1"
+      source  = "github.com/hashicorp/digitalocean"
+    }
   }
 }

@@ -1,0 +1,8 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Cleanup SSH key files
+      loop:
+        - authorized_keys
+        - oink.authorized_keys
+      include_tasks: clean-ssh.tasks.yml

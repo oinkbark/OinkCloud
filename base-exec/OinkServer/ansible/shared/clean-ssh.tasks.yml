@@ -1,0 +1,13 @@
+- name: Remove duplicate entries
+  ansible.builtin.command: 
+    cmd: "sort -u /root/.ssh/{{ item }} -o /root/.ssh/{{ item }}"
+- name: Remove packer setup keys
+  ansible.builtin.lineinfile: 
+    path: "/root/.ssh/{{ item }}"
+    regexp: "^(ssh-rsa)(.*)"
+    state: absent
+- name: Remove terraform setup keys
+  ansible.builtin.lineinfile: 
+    path: "/root/.ssh/{{ item }}"
+    regexp: "^(ssh-ed25519)(.*)(OINKCLOUD terraform)"
+    state: absent
