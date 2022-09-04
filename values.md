@@ -34,6 +34,7 @@ ___
 ### 3. It is needed
 ### 4. It can be used
 ### 5. It provides an experience
+### 6. It evolves
 
 **Conceptual Values:**
 ___
@@ -62,3 +63,8 @@ ___
 - Getting lost in time
 - Making life feel real
 - Committing to being all in
+
+### 6. Variety
+- Fulfilling current needs and expectations 
+- Pushing the boundaries of human mastery
+- Expanding concepts into new fields 
