@@ -41,7 +41,7 @@ ___
 
 ### 1. Liberty
 - Leading self and mind
-- Forging a real destiny
+- Forging a real destiny that brings peace
 - Preserving generational wisdom
 
 ### 2. Discovery
@@ -51,20 +51,20 @@ ___
 
 ### 3. Relativity
 - Listening intently
-- Validating the journey
-- Determining connective output
+- Validating the journey via connective output
+- Being present when needed the most
 
 ### 4. Opportunity
-- Being welcoming and inclusive
+- Freeing of friction; making the path of least resistance thoughtless
 - Choosing to use everything available
 - Expanding accessibility before audience
 
 ### 5. Intensity
-- Getting lost in time
-- Making life feel real
+- Becoming lost in the moment of time; not letting the dreamers wake up
+- Sensing the urgency of action and the gravity of inaction 
 - Committing to being all in
 
 ### 6. Variety
-- Fulfilling current needs and expectations 
-- Pushing the boundaries of human mastery
-- Expanding concepts into new fields 
+- Living in the future while supporting the present
+- Building upon the scarring edge for memorable moments
+- Pushing the conceptual boundaries of human mastery into new fields
